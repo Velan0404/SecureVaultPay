@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "914744085216",
+    "project_id": "vaultpay-1834e",
+    "storage_bucket": "vaultpay-1834e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:914744085216:android:6d021240250a0c53a19e85",
+        "android_client_info": {
+          "package_name": "com.securevaultpay.secure_vault_pay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfQJFKGXrvvYJ8z9hmbsch6T4lDREAAVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
