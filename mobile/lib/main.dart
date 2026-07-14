@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,7 +14,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppConfig.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await const PushNotificationService().requestPermissionAndLogToken();
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  const pushNotificationService = PushNotificationService();
+  await pushNotificationService.requestPermissionAndLogToken();
+  pushNotificationService.listenForForegroundMessages();
+  await pushNotificationService.checkInitialMessage();
   runApp(const ProviderScope(child: MyApp()));
 }
 
