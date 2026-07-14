@@ -60,6 +60,9 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
       case PinUnlockResult.lockedOut:
         showAppSnackBar(context, 'Too many incorrect attempts. Please log in again.');
         setState(() => _isVerifying = false);
+      case PinUnlockResult.networkError:
+        showAppSnackBar(context, 'Could not reach the server. Check your connection and try again.');
+        setState(() => _isVerifying = false);
     }
   }
 

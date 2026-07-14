@@ -14,7 +14,7 @@ const int kMaxPinAttempts = 5;
 
 enum AuthStatus { unknown, unauthenticated, needsUnlock, onboarding, authenticated }
 
-enum PinUnlockResult { success, incorrect, lockedOut }
+enum PinUnlockResult { success, incorrect, lockedOut, networkError }
 
 class AuthState {
   const AuthState({required this.status, this.user});
@@ -83,8 +83,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<bool> canUseBiometrics() => _biometricService.isBiometricAvailable();
 
-  /// Attempts a biometric unlock. Returns false if unavailable, declined, or
-  /// failed — the caller should then fall back to the PIN screen.
+  /// Attempts a biometric unlock. Returns false if unavailable, declined,
+  /// failed, or unreachable — the caller should then fall back to the PIN
+  /// screen (which surfaces a proper error for the unreachable case).
   Future<bool> unlockWithBiometrics() async {
     final enabled = await isBiometricEnabled();
     if (!enabled) return false;
@@ -95,7 +96,7 @@ class AuthNotifier extends Notifier<AuthState> {
     final success = await _biometricService.authenticate();
     if (!success) return false;
 
-    return _completeUnlock();
+    return (await _completeUnlock()) == PinUnlockResult.success;
   }
 
   Future<PinUnlockResult> unlockWithPin(String pin) async {
@@ -104,8 +105,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
     if (storedHash != null && storedSalt != null && PinHasher.hash(pin, storedSalt) == storedHash) {
       await _secureStorage.write(StorageKeys.pinFailCount, '0');
-      final unlocked = await _completeUnlock();
-      return unlocked ? PinUnlockResult.success : PinUnlockResult.incorrect;
+      return _completeUnlock();
     }
 
     final currentCount = int.tryParse(await _secureStorage.read(StorageKeys.pinFailCount) ?? '0') ?? 0;
@@ -126,14 +126,24 @@ class AuthNotifier extends Notifier<AuthState> {
     return PinUnlockResult.incorrect;
   }
 
-  Future<bool> _completeUnlock() async {
+  /// The PIN/biometric itself may have been entered correctly on-device, but
+  /// unlocking also confirms the session is still valid server-side. Those
+  /// are different failure modes and must be handled differently:
+  ///  - the server explicitly rejects the token (revoked/expired/invalid) →
+  ///    the session really is dead, so force a full logout.
+  ///  - any other error (no connectivity, DNS failure, timeout, etc.) → the
+  ///    PIN/biometric was fine, we just couldn't reach the server. Don't wipe
+  ///    a possibly-still-valid session over a transient network blip.
+  Future<PinUnlockResult> _completeUnlock() async {
     try {
       final user = await _authService.checkSession();
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
-      return true;
+      return PinUnlockResult.success;
     } on AppException {
       await logout();
-      return false;
+      return PinUnlockResult.incorrect;
+    } catch (_) {
+      return PinUnlockResult.networkError;
     }
   }
 
@@ -191,6 +201,23 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (_) {
       await logout();
       return false;
+    }
+  }
+
+  /// Keeps the backend's Device.fcmToken current when Firebase rotates the
+  /// token. Only meaningful once a device/session actually exists server-side
+  /// — if the user isn't authenticated yet, the fresh token is picked up
+  /// naturally on the next register/login instead.
+  Future<void> handleFcmTokenRefresh(String token) async {
+    if (state.status != AuthStatus.authenticated) return;
+
+    final deviceId = await _secureStorage.read(StorageKeys.deviceId);
+    if (deviceId == null) return;
+
+    try {
+      await _authService.updateFcmToken(deviceId: deviceId, fcmToken: token);
+    } catch (_) {
+      // Best-effort — will be retried implicitly on the next login/refresh cycle.
     }
   }
 

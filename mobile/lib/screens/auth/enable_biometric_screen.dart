@@ -4,6 +4,7 @@ import 'package:local_auth/local_auth.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_snackbar.dart';
 import '../../widgets/centered_auth_scaffold.dart';
 import '../../widgets/fade_slide_in.dart';
 import '../../widgets/premium_card.dart';
@@ -63,6 +64,8 @@ class _EnableBiometricScreenState extends ConsumerState<EnableBiometricScreen> {
 
     if (success) {
       await ref.read(authProvider.notifier).setBiometricEnabled(true);
+    } else if (mounted) {
+      showAppSnackBar(context, biometricService.failureMessage);
     }
 
     if (mounted) {

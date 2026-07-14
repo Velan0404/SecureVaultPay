@@ -58,6 +58,11 @@ class _CreatePinScreenState extends ConsumerState<CreatePinScreen> {
         showAppSnackBar(context, e.message);
         setState(() => _confirmPinController.clear());
       }
+    } catch (_) {
+      if (mounted) {
+        showAppSnackBar(context, 'Could not reach the server. Check your connection and try again.');
+        setState(() => _confirmPinController.clear());
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

@@ -39,6 +39,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       if (mounted) context.go('/reset-password', extra: email);
     } on AppException catch (e) {
       if (mounted) showAppSnackBar(context, e.message);
+    } catch (_) {
+      if (mounted) showAppSnackBar(context, 'Could not reach the server. Check your connection and try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

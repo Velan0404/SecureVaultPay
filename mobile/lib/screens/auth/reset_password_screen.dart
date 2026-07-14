@@ -54,6 +54,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           _otpController.clear();
         });
       }
+    } catch (_) {
+      if (mounted) showAppSnackBar(context, 'Could not reach the server. Check your connection and try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
