@@ -4,10 +4,82 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Platform {
+  ANDROID
+  IOS
+}
+
+model User {
+  id                String             @id @default(uuid())
+  fullName          String
+  email             String             @unique
+  passwordHash      String
+  pinHash           String?
+  biometricEnabled  Boolean            @default(false)
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  devices           Device[]
+  refreshTokens     RefreshToken[]
+  auditLogs         AuditLog[]
+  passwordResetOtps PasswordResetOtp[]
+}
+
+model Device {
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  deviceId      String
+  deviceName    String?
+  platform      Platform
+  fcmToken      String?
+  lastLogin     DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+
+  refreshTokens RefreshToken[]
+
+  @@unique([userId, deviceId])
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  deviceId   String
+  device     Device    @relation(fields: [deviceId], references: [id])
+  tokenHash  String    @unique
+  ipAddress  String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model PasswordResetOtp {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  otpHash    String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
 }
