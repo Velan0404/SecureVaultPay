@@ -2,6 +2,7 @@ const express = require('express');
 const walletController = require('../controllers/wallet.controller');
 const authenticate = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validate.middleware');
+const requireTransactionAuth = require('../middlewares/transactionAuth.middleware');
 const { walletTransferLimiter, demoMoneyLimiter } = require('../middlewares/rateLimit.middleware');
 const {
   createPurposeWalletSchema,
@@ -23,7 +24,16 @@ router.get('/purpose/:id', walletController.getPurposeWallet);
 router.patch('/purpose/:id', validate(updatePurposeWalletSchema), walletController.updatePurposeWallet);
 router.delete('/purpose/:id', walletController.deletePurposeWallet);
 
-router.post('/transfer', walletTransferLimiter, validate(transferSchema), walletController.transfer);
+// requireTransactionAuth runs BEFORE validate(transferSchema) deliberately —
+// it needs the raw transactionAuthSessionId field, which transferSchema
+// doesn't declare and would otherwise strip from req.body.
+router.post(
+  '/transfer',
+  walletTransferLimiter,
+  requireTransactionAuth,
+  validate(transferSchema),
+  walletController.transfer,
+);
 
 router.get('/transactions', walletController.listTransactions);
 router.get('/dashboard', walletController.getDashboard);

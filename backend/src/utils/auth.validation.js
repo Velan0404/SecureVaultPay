@@ -8,6 +8,12 @@ const passwordSchema = z
 
 const pinSchema = z.string().regex(/^\d{6}$/, 'PIN must be exactly 6 digits.');
 
+// International format, e.g. +919876543210 — same shape Transaction
+// Authentication requires for Twilio Verify delivery.
+const phoneNumberSchema = z
+  .string()
+  .regex(/^\+[1-9]\d{7,14}$/, 'Enter a mobile number in international format, e.g. +919876543210.');
+
 const deviceSchema = z.object({
   deviceId: z.string().min(1, 'deviceId is required.'),
   deviceName: z.string().optional(),
@@ -18,6 +24,7 @@ const deviceSchema = z.object({
 const registerSchema = z.object({
   fullName: z.string().min(1, 'Full name is required.'),
   email: z.string().email('Enter a valid email address.'),
+  phoneNumber: phoneNumberSchema,
   password: passwordSchema,
   device: deviceSchema,
 });

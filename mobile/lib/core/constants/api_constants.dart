@@ -22,4 +22,13 @@ class ApiConstants {
   static const String walletTransfer = '/wallet/transfer';
   static const String walletTransactions = '/wallet/transactions';
   static const String walletDashboard = '/wallet/dashboard';
+
+  static const String transactionAuthPhone = '/transaction-auth/phone';
+  static const String transactionAuthStart = '/transaction-auth/start';
+  static String transactionAuthConfirmFingerprint(String sessionId) =>
+      '/transaction-auth/$sessionId/confirm-fingerprint';
+  static String transactionAuthFingerprintFailed(String sessionId) =>
+      '/transaction-auth/$sessionId/fingerprint-failed';
+  static String transactionAuthOtpSend(String sessionId) => '/transaction-auth/$sessionId/otp/send';
+  static String transactionAuthOtpVerify(String sessionId) => '/transaction-auth/$sessionId/otp/verify';
 }

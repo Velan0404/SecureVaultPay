@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/errors/app_exception.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../models/purpose_wallet_model.dart';
 import '../../providers/wallet_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/app_snackbar.dart';
 import '../../widgets/fade_slide_in.dart';
 import '../../widgets/premium_card.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/wallet_icons.dart';
+import 'transaction_authentication_screen.dart';
 
 /// Main Wallet -> Purpose Wallet transfer. If [preselectedWallet] is passed
 /// (from the Wallet Details screen), the target is fixed; otherwise the user
@@ -36,7 +35,6 @@ class _TransferMoneyScreenState extends ConsumerState<TransferMoneyScreen> {
   // onto a stale instance made the dropdown crash the moment the list
   // refreshed underneath it (confirmed live on-device).
   String? _selectedWalletId;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -53,35 +51,29 @@ class _TransferMoneyScreenState extends ConsumerState<TransferMoneyScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  // This screen only collects the target wallet and amount — the transfer
+  // itself is never called from here. Continuing hands off to the mandatory
+  // Transaction Authentication flow (fingerprint, then OTP), which is the
+  // only place a transfer can actually be executed.
+  void _continue() {
     if (!_formKey.currentState!.validate() || _selectedWalletId == null) return;
-    setState(() => _isLoading = true);
 
     final walletId = _selectedWalletId!;
-    String walletName = widget.preselectedWallet?.name ?? 'wallet';
-    for (final wallet in ref.read(walletProvider).purposeWallets) {
-      if (wallet.id == walletId) {
-        walletName = wallet.name;
-        break;
+    PurposeWalletModel? wallet = widget.preselectedWallet;
+    if (wallet == null) {
+      for (final w in ref.read(walletProvider).purposeWallets) {
+        if (w.id == walletId) {
+          wallet = w;
+          break;
+        }
       }
     }
+    if (wallet == null) return;
 
-    try {
-      await ref.read(walletProvider.notifier).transfer(
-            purposeWalletId: walletId,
-            amount: _amountController.text.trim(),
-          );
-      if (mounted) {
-        showAppSnackBar(context, 'Transferred to $walletName.', isError: false);
-        context.pop();
-      }
-    } on AppException catch (e) {
-      if (mounted) showAppSnackBar(context, e.message);
-    } catch (_) {
-      if (mounted) showAppSnackBar(context, 'Could not reach the server. Check your connection and try again.');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    context.push(
+      '/wallet/transaction-auth',
+      extra: TransactionAuthRouteArgs(wallet: wallet, amount: _amountController.text.trim()),
+    );
   }
 
   @override
@@ -142,7 +134,7 @@ class _TransferMoneyScreenState extends ConsumerState<TransferMoneyScreen> {
                     },
                   ),
                   const SizedBox(height: 28),
-                  PrimaryButton(label: 'Transfer', onPressed: _submit, isLoading: _isLoading),
+                  PrimaryButton(label: 'Continue', onPressed: _continue),
                 ],
               ),
             ),

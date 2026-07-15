@@ -73,10 +73,22 @@ class WalletService {
     return _apiClient.delete('${ApiConstants.walletPurpose}/$id');
   }
 
-  Future<Map<String, dynamic>> transfer({required String purposeWalletId, required String amount}) async {
+  // transactionAuthSessionId proves fingerprint + Twilio OTP were already
+  // completed (see TransactionAuthenticationScreen) — the backend rejects
+  // this call outright without a verified session for this exact wallet and
+  // amount.
+  Future<Map<String, dynamic>> transfer({
+    required String purposeWalletId,
+    required String amount,
+    required String transactionAuthSessionId,
+  }) async {
     final data = await _apiClient.post(
       ApiConstants.walletTransfer,
-      body: {'purposeWalletId': purposeWalletId, 'amount': amount},
+      body: {
+        'purposeWalletId': purposeWalletId,
+        'amount': amount,
+        'transactionAuthSessionId': transactionAuthSessionId,
+      },
     );
     return data['transfer'] as Map<String, dynamic>;
   }

@@ -20,12 +20,13 @@ function toPublicUser(user) {
     id: user.id,
     fullName: user.fullName,
     email: user.email,
+    phoneNumber: user.phoneNumber,
     biometricEnabled: user.biometricEnabled,
     createdAt: user.createdAt,
   };
 }
 
-async function register({ fullName, email, password, device }, ipAddress) {
+async function register({ fullName, email, phoneNumber, password, device }, ipAddress) {
   const normalizedEmail = email.trim().toLowerCase();
 
   const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -34,8 +35,11 @@ async function register({ fullName, email, password, device }, ipAddress) {
   }
 
   const passwordHash = await hashPassword(password);
+  // phoneNumber is stored directly on the account at registration — this is
+  // the same field Transaction Authentication reads for Twilio OTP delivery
+  // on Main Wallet transfers, so a new user never needs to set it separately.
   const user = await prisma.user.create({
-    data: { fullName, email: normalizedEmail, passwordHash },
+    data: { fullName, email: normalizedEmail, phoneNumber, passwordHash },
   });
 
   const { device: deviceRecord } = await deviceService.upsertDevice(user.id, device);

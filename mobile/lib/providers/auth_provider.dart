@@ -72,8 +72,8 @@ class AuthNotifier extends Notifier<AuthState> {
     }
     // A refresh token can exist without a local PIN yet if the app was killed
     // mid-onboarding (after register, before Create PIN completed).
-    final hasLocalPin = await _secureStorage.read(StorageKeys.pinHash) != null;
-    state = state.copyWith(status: hasLocalPin ? AuthStatus.needsUnlock : AuthStatus.onboarding);
+    final deviceSetupComplete = await _secureStorage.isDeviceSetupComplete();
+    state = state.copyWith(status: deviceSetupComplete ? AuthStatus.needsUnlock : AuthStatus.onboarding);
   }
 
   Future<bool> isBiometricEnabled() async {
@@ -147,21 +147,40 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  /// New accounts always go through PIN/biometric onboarding on this device.
-  Future<void> register({required String fullName, required String email, required String password}) async {
-    final result = await _authService.register(fullName: fullName, email: email, password: password);
+  /// A brand new account always goes through Create PIN + Enable Fingerprint
+  /// on this device — never skipped, even if this device already has a PIN
+  /// from a previous account. Account state (this registration) and device
+  /// state (PIN/biometric setup) are separate concerns: a new account must
+  /// get its own device setup, not inherit someone else's, so any leftover
+  /// PIN/biometric on this device is wiped first.
+  Future<void> register({
+    required String fullName,
+    required String email,
+    required String phoneNumber,
+    required String password,
+  }) async {
+    final result = await _authService.register(
+      fullName: fullName,
+      email: email,
+      phoneNumber: phoneNumber,
+      password: password,
+    );
+    await _secureStorage.resetDeviceSetup();
     await _secureStorage.saveSession(accessToken: result.accessToken, refreshToken: result.refreshToken);
     state = state.copyWith(status: AuthStatus.onboarding, user: result.user);
   }
 
-  /// Existing accounts skip onboarding only if this specific device already
-  /// has a local PIN set up (PIN/biometric are device-local, not account-wide).
+  /// Verifying the password is not the same as unlocking the app: if this
+  /// device already has a PIN/biometric set up, a fresh login still has to
+  /// pass through that local gate (fingerprint-first, PIN fallback — see
+  /// PinUnlockScreen) before reaching the Dashboard, exactly like reopening
+  /// the app does. Only a device with no PIN set up yet goes to onboarding.
   Future<void> login({required String email, required String password}) async {
     final result = await _authService.login(email: email, password: password);
     await _secureStorage.saveSession(accessToken: result.accessToken, refreshToken: result.refreshToken);
-    final hasLocalPin = await _secureStorage.read(StorageKeys.pinHash) != null;
+    final deviceSetupComplete = await _secureStorage.isDeviceSetupComplete();
     state = state.copyWith(
-      status: hasLocalPin ? AuthStatus.authenticated : AuthStatus.onboarding,
+      status: deviceSetupComplete ? AuthStatus.needsUnlock : AuthStatus.onboarding,
       user: result.user,
     );
   }

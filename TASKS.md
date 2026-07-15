@@ -12,11 +12,11 @@
 
 ## Authentication
 
-- [x] Register
-- [x] Login
+- [x] Register (collects mobile number via a fixed +91 prefix + 10-digit input; always initializes fresh device setup, required for Transaction Authentication OTP delivery)
+- [x] Login (a returning device still passes through fingerprint/PIN unlock after credentials verify — never skips straight to Dashboard, never re-asks Create PIN)
 - [x] JWT (access + refresh, rotation with reuse detection)
 - [x] Fingerprint Login
-- [x] App PIN (create, verify, lockout)
+- [x] App PIN — device state, separate from account state: created once per device (register always creates a fresh one; login/returning sessions reuse it and never re-ask), persists across logout, cleared only by explicit reset/new device/reinstall
 - [x] Session Restore / Splash session check
 - [x] Logout
 - [x] Forgot Password / Reset Password (OTP)
@@ -41,9 +41,21 @@
 - [x] Load Demo Wallet (dev-only, one-time ₹100,000)
 - [x] Purpose Wallets (create, edit, soft-delete/archive, view)
 - [x] Create Wallet
-- [x] Wallet Transfer (Main -> Purpose, atomic, race-condition safe)
+- [x] Wallet Transfer (Main -> Purpose, atomic, race-condition safe, now requires Transaction Authentication)
 - [x] Transaction History (paginated)
 - [x] Phase 4 live device + backend E2E testing — no critical issues found
+- [x] Premium dark UI redesign (design system, bottom nav shell, all wallet/dashboard screens)
+
+---
+
+## Security (Transaction Authentication)
+
+- [x] Fingerprint confirmation (on-device, mandatory, max 3 attempts)
+- [x] Twilio Verify OTP (generation/validation entirely on Twilio's side, 5-minute expiry, 5 attempts)
+- [x] Session-gated Main Wallet -> Purpose Wallet transfers (single-use, race-condition safe)
+- [x] Real-money live test completed: real OTP sent + verified + transfer executed + replay rejected
+- [x] Firebase push notification on successful transfer (real Admin SDK integration)
+- [x] Audit logging (user, device, time, amount, wallet, transaction id) + analytics events
 
 ---
 
@@ -73,16 +85,16 @@
 
 ## Notifications
 
-- [ ] Payment Success
+- [x] Payment Success (real Firebase push on successful transfer)
 - [ ] Scheduled Payment Reminder
 
 ---
 
 ## Profile
 
-- [ ] User Profile
-- [ ] Settings
-- [ ] Security
+- [x] User Profile (real name/email/biometric status/wallet count)
+- [x] Transfer verification phone number
+- [ ] Settings (notifications, privacy — coming-soon placeholders)
 
 ---
 

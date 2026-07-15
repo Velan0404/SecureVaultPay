@@ -18,6 +18,7 @@ import '../screens/profile/profile_screen.dart';
 import '../screens/schedule/schedule_screen.dart';
 import '../screens/wallet/main_wallet_screen.dart';
 import '../screens/wallet/purpose_wallet_form_screen.dart';
+import '../screens/wallet/transaction_authentication_screen.dart';
 import '../screens/wallet/transaction_history_screen.dart';
 import '../screens/wallet/transfer_money_screen.dart';
 import '../screens/wallet/wallet_details_screen.dart';
@@ -169,6 +170,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/wallet/transfer',
         pageBuilder: (context, state) =>
             _fadeThroughPage(state, TransferMoneyScreen(preselectedWallet: state.extra as PurposeWalletModel?)),
+      ),
+      GoRoute(
+        path: '/wallet/transaction-auth',
+        pageBuilder: (context, state) {
+          final args = state.extra! as TransactionAuthRouteArgs;
+          return _fadeThroughPage(
+            state,
+            TransactionAuthenticationScreen(
+              purposeWalletId: args.wallet.id,
+              purposeWalletName: args.wallet.name,
+              purposeWalletIcon: args.wallet.icon,
+              purposeWalletColor: args.wallet.color,
+              amount: args.amount,
+            ),
+          );
+        },
       ),
       GoRoute(
         path: '/wallet/transactions',

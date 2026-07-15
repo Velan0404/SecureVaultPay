@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/errors/app_exception.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/transaction_auth_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_snackbar.dart';
 import '../../widgets/fade_slide_in.dart';
 import '../../widgets/premium_card.dart';
 import '../../widgets/profile_menu_tile.dart';
@@ -32,6 +35,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text('$feature is coming in a future update.')));
+  }
+
+  Future<void> _editTransferPhoneNumber() async {
+    final controller = TextEditingController();
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Phone number for transfers'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Main Wallet transfers require a one-time code sent by SMS. Enter your number in international format.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(hintText: '+919876543210', prefixIcon: Icon(Icons.phone_outlined)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => context.pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => context.pop(true), child: const Text('Save')),
+        ],
+      ),
+    );
+
+    if (saved != true || !mounted) return;
+
+    try {
+      await ref.read(transactionAuthRepositoryProvider).setPhoneNumber(controller.text.trim());
+      if (mounted) showAppSnackBar(context, 'Phone number saved for transfer verification.', isError: false);
+    } on AppException catch (e) {
+      if (mounted) showAppSnackBar(context, e.message);
+    } catch (_) {
+      if (mounted) showAppSnackBar(context, 'Could not reach the server. Check your connection and try again.');
+    }
   }
 
   @override
@@ -96,6 +139,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: 'Manage Wallets',
             subtitle: '$walletCount active wallet${walletCount == 1 ? '' : 's'}',
             onTap: () => context.go('/wallet/main'),
+          ),
+          ProfileMenuTile(
+            icon: Icons.sms_outlined,
+            iconColor: AppColors.primaryRed,
+            title: 'Transfer Verification Number',
+            subtitle: 'Required for Main Wallet transfers',
+            onTap: _editTransferPhoneNumber,
           ),
           ProfileMenuTile(
             icon: Icons.calendar_month_outlined,

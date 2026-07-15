@@ -36,6 +36,7 @@ Authentication
 - JWT
 - bcrypt
 - local_auth
+- Twilio Verify (Transaction Authentication OTP for Main Wallet transfers)
 
 Version Control
 
@@ -46,7 +47,7 @@ Version Control
 
 ## Current Status
 
-Phase 4 complete — Wallet Module (Main Wallet, Purpose Wallets, Wallet Transfers, Transaction History, Dashboard) is built and verified end-to-end against the live backend and Neon PostgreSQL. Authentication, backend infrastructure, and Firebase Cloud Messaging readiness were verified in Phase 3.9. Awaiting confirmation before Phase 5.
+Security Upgrade Phase complete — Main Wallet transfers now require Transaction Authentication (mandatory fingerprint, then a Twilio Verify OTP) before executing, with real-money live testing completed (real SMS sent, verified, transfer executed, replay rejected). The premium dark UI redesign (design system, floating bottom navigation, all screens) and the Wallet Module (Phase 4) are also complete. Authentication, backend infrastructure, and Firebase Cloud Messaging readiness were verified in Phase 3.9. Awaiting confirmation before Phase 5.
 
 ---
 

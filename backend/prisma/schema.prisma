@@ -44,6 +44,20 @@ enum WalletTransactionStatus {
   FAILED
 }
 
+// State machine for Transaction Authentication (fingerprint-then-OTP,
+// required before any Main Wallet -> Purpose Wallet transfer). No OTP code
+// is ever stored here — only status/timestamps, since Twilio Verify owns
+// generation and validation entirely.
+enum TransactionAuthStatus {
+  PENDING_FINGERPRINT
+  FINGERPRINT_CONFIRMED
+  OTP_SENT
+  OTP_VERIFIED
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
 model User {
   id                String             @id @default(uuid())
   fullName          String
@@ -55,12 +69,34 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
-  devices            Device[]
-  refreshTokens      RefreshToken[]
-  auditLogs          AuditLog[]
-  passwordResetOtps  PasswordResetOtp[]
-  mainWallet         MainWallet?
-  walletTransactions WalletTransaction[]
+  // Required before Transaction Authentication (Twilio OTP delivery) can be
+  // used — set via the transaction-auth module, not the registration flow.
+  phoneNumber String?
+
+  devices                 Device[]
+  refreshTokens           RefreshToken[]
+  auditLogs               AuditLog[]
+  passwordResetOtps       PasswordResetOtp[]
+  mainWallet              MainWallet?
+  walletTransactions      WalletTransaction[]
+  transactionAuthSessions TransactionAuthSession[]
+}
+
+model TransactionAuthSession {
+  id                     String                @id @default(uuid())
+  userId                 String
+  user                   User                  @relation(fields: [userId], references: [id])
+  deviceId               String
+  purposeWalletId        String
+  amount                 Decimal               @db.Decimal(14, 2)
+  status                 TransactionAuthStatus @default(PENDING_FINGERPRINT)
+  otpAttempts            Int                   @default(0)
+  fingerprintConfirmedAt DateTime?
+  otpSentAt              DateTime?
+  otpVerifiedAt          DateTime?
+  completedAt            DateTime?
+  expiresAt              DateTime
+  createdAt              DateTime              @default(now())
 }
 
 model MainWallet {

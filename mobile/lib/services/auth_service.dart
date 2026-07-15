@@ -13,12 +13,19 @@ class AuthService {
   Future<AuthResult> register({
     required String fullName,
     required String email,
+    required String phoneNumber,
     required String password,
   }) async {
     final device = await _deviceService.currentDevice();
     final data = await _apiClient.post(
       ApiConstants.register,
-      body: {'fullName': fullName, 'email': email, 'password': password, 'device': device.toJson()},
+      body: {
+        'fullName': fullName,
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'password': password,
+        'device': device.toJson(),
+      },
       requiresAuth: false,
     );
     return AuthResult.fromJson(data);

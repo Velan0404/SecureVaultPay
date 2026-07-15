@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,6 +21,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
@@ -28,6 +30,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -41,6 +44,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       await ref.read(authProvider.notifier).register(
             fullName: _nameController.text.trim(),
             email: _emailController.text.trim(),
+            // Only the 10-digit national number is collected on screen — the
+            // +91 country code is fixed UI, never typed, and prepended here
+            // so the backend only ever sees/stores the full +91XXXXXXXXXX form.
+            phoneNumber: '+91${_phoneController.text.trim()}',
             password: _passwordController.text,
           );
     } on AppException catch (e) {
@@ -86,6 +93,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     if (value == null || value.trim().isEmpty) return 'Email is required.';
                     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())) {
                       return 'Enter a valid email address.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                  decoration: const InputDecoration(
+                    labelText: 'Mobile number',
+                    hintText: '9876543210',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                    // Fixed, non-editable country code — the user only ever
+                    // types the 10-digit number.
+                    prefixText: '+91  ',
+                    counterText: '',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'Mobile number is required.';
+                    if (!RegExp(r'^\d{10}$').hasMatch(value.trim())) {
+                      return 'Enter a valid 10-digit mobile number.';
                     }
                     return null;
                   },

@@ -145,8 +145,16 @@ class WalletNotifier extends Notifier<WalletState> {
     await refreshSilently();
   }
 
-  Future<void> transfer({required String purposeWalletId, required String amount}) async {
-    await _repository.transfer(purposeWalletId: purposeWalletId, amount: amount);
+  Future<void> transfer({
+    required String purposeWalletId,
+    required String amount,
+    required String transactionAuthSessionId,
+  }) async {
+    await _repository.transfer(
+      purposeWalletId: purposeWalletId,
+      amount: amount,
+      transactionAuthSessionId: transactionAuthSessionId,
+    );
     await refreshSilently();
   }
 

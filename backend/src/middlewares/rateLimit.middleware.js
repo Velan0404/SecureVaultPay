@@ -6,6 +6,13 @@ function emailKeyGenerator(req) {
   return `${ipKeyGenerator(req.ip)}:${email}`;
 }
 
+// Transaction Authentication runs behind `authenticate`, so req.user.id is
+// always present — keying by user (not IP) means the limit follows the
+// account regardless of network/NAT.
+function userKeyGenerator(req) {
+  return req.user ? req.user.id : ipKeyGenerator(req.ip);
+}
+
 function rateLimitedResponse(req, res, next, options) {
   res.status(options.statusCode).json({
     success: false,
@@ -85,6 +92,36 @@ const demoMoneyLimiter = rateLimit({
   handler: rateLimitedResponse,
 });
 
+// Transaction Authentication (Main Wallet transfer security layer).
+const transactionAuthStartLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
+const otpSendLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
+// A coarse backstop across all sessions — the real 5-attempt cap per session
+// lives in transaction_auth.service.js's own otpAttempts tracking.
+const otpVerifyLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
 module.exports = {
   loginLimiter,
   registerLimiter,
@@ -94,4 +131,7 @@ module.exports = {
   refreshLimiter,
   walletTransferLimiter,
   demoMoneyLimiter,
+  transactionAuthStartLimiter,
+  otpSendLimiter,
+  otpVerifyLimiter,
 };

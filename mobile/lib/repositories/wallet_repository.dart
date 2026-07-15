@@ -68,8 +68,16 @@ class WalletRepository {
     return _service.deletePurposeWallet(id);
   }
 
-  Future<void> transfer({required String purposeWalletId, required String amount}) {
-    return _service.transfer(purposeWalletId: purposeWalletId, amount: amount);
+  Future<void> transfer({
+    required String purposeWalletId,
+    required String amount,
+    required String transactionAuthSessionId,
+  }) {
+    return _service.transfer(
+      purposeWalletId: purposeWalletId,
+      amount: amount,
+      transactionAuthSessionId: transactionAuthSessionId,
+    );
   }
 
   Future<({List<WalletTransactionModel> transactions, String? nextCursor})> listTransactions({
