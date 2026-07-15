@@ -45,7 +45,9 @@ class _MyAppState extends ConsumerState<MyApp> {
     return MaterialApp.router(
       title: 'SecureVault Pay',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
       routerConfig: router,
     );
   }

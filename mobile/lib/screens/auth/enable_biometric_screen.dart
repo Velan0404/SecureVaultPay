@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/app_snackbar.dart';
 import '../../widgets/centered_auth_scaffold.dart';
 import '../../widgets/fade_slide_in.dart';
+import '../../widgets/loading_indicator.dart';
 import '../../widgets/premium_card.dart';
 import '../../widgets/primary_button.dart';
 
@@ -103,7 +104,7 @@ class _EnableBiometricScreenState extends ConsumerState<EnableBiometricScreen> {
               ),
               const SizedBox(height: 32),
               if (_isChecking)
-                const Center(child: CircularProgressIndicator())
+                const Center(child: LoadingIndicator())
               else ...[
                 if (_isAvailable)
                   PrimaryButton(label: 'Enable $_label', onPressed: _enable, isLoading: _isProcessing),

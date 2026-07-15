@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../models/purpose_wallet_model.dart';
 import '../providers/auth_provider.dart';
+import '../screens/analytics/analytics_screen.dart';
 import '../screens/auth/create_pin_screen.dart';
 import '../screens/auth/enable_biometric_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
@@ -11,7 +13,15 @@ import '../screens/auth/pin_unlock_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/auth/reset_password_screen.dart';
 import '../screens/auth/splash_screen.dart';
-import '../screens/dashboard/dashboard_placeholder_screen.dart';
+import '../screens/dashboard/dashboard_screen.dart';
+import '../screens/profile/profile_screen.dart';
+import '../screens/schedule/schedule_screen.dart';
+import '../screens/wallet/main_wallet_screen.dart';
+import '../screens/wallet/purpose_wallet_form_screen.dart';
+import '../screens/wallet/transaction_history_screen.dart';
+import '../screens/wallet/transfer_money_screen.dart';
+import '../screens/wallet/wallet_details_screen.dart';
+import '../widgets/app_shell.dart';
 
 const _publicRoutes = {'/login', '/register', '/forgot-password', '/reset-password'};
 const _onboardingRoutes = {'/create-pin', '/enable-biometric'};
@@ -106,9 +116,75 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/unlock',
         pageBuilder: (context, state) => _fadeThroughPage(state, const PinUnlockScreen()),
       ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/dashboard',
+                pageBuilder: (context, state) => _fadeThroughPage(state, const DashboardScreen()),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/wallet/main',
+                pageBuilder: (context, state) => _fadeThroughPage(state, const MainWalletScreen()),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/schedule',
+                pageBuilder: (context, state) => _fadeThroughPage(state, const ScheduleScreen()),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/analytics',
+                pageBuilder: (context, state) => _fadeThroughPage(state, const AnalyticsScreen()),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                pageBuilder: (context, state) => _fadeThroughPage(state, const ProfileScreen()),
+              ),
+            ],
+          ),
+        ],
+      ),
       GoRoute(
-        path: '/dashboard',
-        pageBuilder: (context, state) => _fadeThroughPage(state, const DashboardPlaceholderScreen()),
+        path: '/wallet/create',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const PurposeWalletFormScreen()),
+      ),
+      GoRoute(
+        path: '/wallet/transfer',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, TransferMoneyScreen(preselectedWallet: state.extra as PurposeWalletModel?)),
+      ),
+      GoRoute(
+        path: '/wallet/transactions',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const TransactionHistoryScreen()),
+      ),
+      GoRoute(
+        path: '/wallet/:id',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, WalletDetailsScreen(walletId: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/wallet/:id/edit',
+        pageBuilder: (context, state) => _fadeThroughPage(
+          state,
+          PurposeWalletFormScreen(existingWallet: state.extra as PurposeWalletModel?),
+        ),
       ),
     ],
   );

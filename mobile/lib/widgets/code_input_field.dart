@@ -74,7 +74,7 @@ class _CodeInputFieldState extends State<CodeInputField> {
                   border: Border.all(
                     color: isCurrent
                         ? AppColors.secondaryRed
-                        : (filled ? AppColors.primaryBlack.withValues(alpha: 0.2) : AppColors.divider),
+                        : (filled ? AppColors.textMuted : AppColors.divider),
                     width: isCurrent ? 1.6 : 1,
                   ),
                 ),

@@ -17,6 +17,33 @@ enum Platform {
   IOS
 }
 
+enum PurposeWalletStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+// Deliberately broader than what Phase 4 uses (only WALLET_CREATED,
+// WALLET_UPDATED, WALLET_DELETED, DEMO_LOAD, and MAIN_TO_PURPOSE are written
+// today) so future payment/scheduling modules can reuse this table without a
+// breaking migration. PURPOSE_TO_MAIN, PURPOSE_PAYMENT, REFUND, and
+// ADJUSTMENT are reserved, not implemented in this phase.
+enum WalletTransactionType {
+  WALLET_CREATED
+  WALLET_UPDATED
+  WALLET_DELETED
+  DEMO_LOAD
+  MAIN_TO_PURPOSE
+  PURPOSE_TO_MAIN
+  PURPOSE_PAYMENT
+  REFUND
+  ADJUSTMENT
+}
+
+enum WalletTransactionStatus {
+  SUCCESS
+  FAILED
+}
+
 model User {
   id                String             @id @default(uuid())
   fullName          String
@@ -28,10 +55,70 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
-  devices           Device[]
-  refreshTokens     RefreshToken[]
-  auditLogs         AuditLog[]
-  passwordResetOtps PasswordResetOtp[]
+  devices            Device[]
+  refreshTokens      RefreshToken[]
+  auditLogs          AuditLog[]
+  passwordResetOtps  PasswordResetOtp[]
+  mainWallet         MainWallet?
+  walletTransactions WalletTransaction[]
+}
+
+model MainWallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  balance   Decimal  @default(0) @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purposeWallets PurposeWallet[]
+  transfers      WalletTransfer[]
+  transactions   WalletTransaction[]
+}
+
+model PurposeWallet {
+  id            String              @id @default(uuid())
+  mainWalletId  String
+  mainWallet    MainWallet          @relation(fields: [mainWalletId], references: [id])
+  name          String
+  icon          String
+  color         String
+  purpose       String?
+  balance       Decimal             @default(0) @db.Decimal(14, 2)
+  spendingLimit Decimal?            @db.Decimal(14, 2)
+  status        PurposeWalletStatus @default(ACTIVE)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  transfers    WalletTransfer[]
+  transactions WalletTransaction[]
+}
+
+model WalletTransfer {
+  id              String        @id @default(uuid())
+  mainWalletId    String
+  mainWallet      MainWallet    @relation(fields: [mainWalletId], references: [id])
+  purposeWalletId String
+  purposeWallet   PurposeWallet @relation(fields: [purposeWalletId], references: [id])
+  amount          Decimal       @db.Decimal(14, 2)
+  createdAt       DateTime      @default(now())
+}
+
+model WalletTransaction {
+  id              String                  @id @default(uuid())
+  userId          String
+  user            User                    @relation(fields: [userId], references: [id])
+  mainWalletId    String?
+  mainWallet      MainWallet?             @relation(fields: [mainWalletId], references: [id])
+  purposeWalletId String?
+  purposeWallet   PurposeWallet?          @relation(fields: [purposeWalletId], references: [id])
+  type            WalletTransactionType
+  amount          Decimal                 @db.Decimal(14, 2)
+  source          String?
+  destination     String?
+  description     String?
+  status          WalletTransactionStatus @default(SUCCESS)
+  createdAt       DateTime                @default(now())
 }
 
 model Device {

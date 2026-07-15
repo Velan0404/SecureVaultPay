@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/brand_mark_painter.dart';
+import '../../widgets/loading_indicator.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -78,11 +79,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
               ),
             ),
             const SizedBox(height: 40),
-            const SizedBox(
-              height: 28,
-              width: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.accentCrimson),
-            ),
+            const LoadingIndicator(size: 28),
           ],
         ),
       ),

@@ -32,6 +32,10 @@ class ApiClient {
     return _send('PATCH', path, body: body, requiresAuth: requiresAuth);
   }
 
+  Future<Map<String, dynamic>> delete(String path, {bool requiresAuth = true}) {
+    return _send('DELETE', path, requiresAuth: requiresAuth);
+  }
+
   Future<Map<String, dynamic>> _send(
     String method,
     String path, {
@@ -57,6 +61,8 @@ class ApiClient {
         response = await http.post(uri, headers: headers, body: encodedBody);
       case 'PATCH':
         response = await http.patch(uri, headers: headers, body: encodedBody);
+      case 'DELETE':
+        response = await http.delete(uri, headers: headers, body: encodedBody);
       default:
         throw UnsupportedError('Unsupported HTTP method: $method');
     }

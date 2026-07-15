@@ -15,4 +15,11 @@ class ApiConstants {
   static const String resetPassword = '/auth/reset-password';
   static const String checkSession = '/auth/check-session';
   static const String deviceFcmToken = '/auth/device/fcm-token';
+
+  static const String walletMain = '/wallet/main';
+  static const String walletLoadDemo = '/wallet/main/load-demo';
+  static const String walletPurpose = '/wallet/purpose';
+  static const String walletTransfer = '/wallet/transfer';
+  static const String walletTransactions = '/wallet/transactions';
+  static const String walletDashboard = '/wallet/dashboard';
 }

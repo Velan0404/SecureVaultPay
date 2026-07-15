@@ -2,39 +2,48 @@
 
 ## Project Setup
 
-- [ ] Create Flutter Project
-- [ ] Create Node.js Backend
-- [ ] Configure PostgreSQL
-- [ ] Configure Prisma
-- [ ] Configure GitHub
+- [x] Create Flutter Project
+- [x] Create Node.js Backend
+- [x] Configure PostgreSQL
+- [x] Configure Prisma
+- [x] Configure GitHub
 
 ---
 
 ## Authentication
 
-- [ ] Register
-- [ ] Login
-- [ ] JWT
-- [ ] Fingerprint Login
-- [ ] App PIN
+- [x] Register
+- [x] Login
+- [x] JWT (access + refresh, rotation with reuse detection)
+- [x] Fingerprint Login
+- [x] App PIN (create, verify, lockout)
+- [x] Session Restore / Splash session check
+- [x] Logout
+- [x] Forgot Password / Reset Password (OTP)
+- [x] Secure Storage (flutter_secure_storage)
+- [x] Firebase Cloud Messaging readiness (init, permission, token gen/refresh/upload, foreground/background/terminated handlers)
+- [x] Backend security audit (rate limiting, hashing, CORS, Helmet, validation)
+- [x] Phase 3.9 production-readiness audit — no critical issues found
 
 ---
 
 ## Dashboard
 
-- [ ] Home Screen
-- [ ] Quick Actions
-- [ ] Recent Transactions
+- [x] Home Screen
+- [x] Quick Actions
+- [x] Recent Transactions
 
 ---
 
 ## Wallet
 
-- [ ] Main Wallet
-- [ ] Load Demo Wallet
-- [ ] Purpose Wallets
-- [ ] Create Wallet
-- [ ] Wallet Transfer
+- [x] Main Wallet (auto-provisioned lazily, one per user)
+- [x] Load Demo Wallet (dev-only, one-time ₹100,000)
+- [x] Purpose Wallets (create, edit, soft-delete/archive, view)
+- [x] Create Wallet
+- [x] Wallet Transfer (Main -> Purpose, atomic, race-condition safe)
+- [x] Transaction History (paginated)
+- [x] Phase 4 live device + backend E2E testing — no critical issues found
 
 ---
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_radius.dart';
 import '../theme/app_theme.dart';
+import 'loading_indicator.dart';
 
 class PrimaryButton extends StatefulWidget {
   const PrimaryButton({super.key, required this.label, required this.onPressed, this.isLoading = false});
@@ -36,7 +38,7 @@ class _PrimaryButtonState extends State<PrimaryButton> {
             height: 56,
             decoration: BoxDecoration(
               gradient: AppColors.buttonGradient,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppRadius.mdRadius,
               boxShadow: [
                 BoxShadow(
                   color: AppColors.secondaryRed.withValues(alpha: 0.35),
@@ -47,11 +49,7 @@ class _PrimaryButtonState extends State<PrimaryButton> {
             ),
             alignment: Alignment.center,
             child: widget.isLoading
-                ? const SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                  )
+                ? const LoadingIndicator(size: 22, color: Colors.white)
                 : Text(
                     widget.label,
                     style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),

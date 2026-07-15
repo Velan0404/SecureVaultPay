@@ -7,6 +7,7 @@ import '../../widgets/app_snackbar.dart';
 import '../../widgets/centered_auth_scaffold.dart';
 import '../../widgets/code_input_field.dart';
 import '../../widgets/fade_slide_in.dart';
+import '../../widgets/loading_indicator.dart';
 import '../../widgets/premium_card.dart';
 
 class PinUnlockScreen extends ConsumerStatefulWidget {
@@ -79,10 +80,10 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
                 height: 56,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlack.withValues(alpha: 0.06),
+                  color: AppColors.primaryRed.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.lock_outline, color: AppColors.primaryBlack, size: 28),
+                child: const Icon(Icons.lock_outline, color: AppColors.primaryRed, size: 28),
               ),
               const SizedBox(height: 20),
               Text('Enter your PIN', style: Theme.of(context).textTheme.headlineSmall),
@@ -92,7 +93,7 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
               if (_isCheckingBiometrics || _isVerifying)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(child: LoadingIndicator()),
                 )
               else
                 CodeInputField(controller: _pinController, obscureText: true, onCompleted: _onPinCompleted),

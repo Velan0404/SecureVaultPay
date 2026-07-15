@@ -69,6 +69,22 @@ const refreshLimiter = rateLimit({
   handler: rateLimitedResponse,
 });
 
+const walletTransferLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitedResponse,
+});
+
+const demoMoneyLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitedResponse,
+});
+
 module.exports = {
   loginLimiter,
   registerLimiter,
@@ -76,4 +92,6 @@ module.exports = {
   resetPasswordLimiter,
   pinVerifyLimiter,
   refreshLimiter,
+  walletTransferLimiter,
+  demoMoneyLimiter,
 };

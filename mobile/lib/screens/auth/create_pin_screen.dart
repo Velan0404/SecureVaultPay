@@ -9,6 +9,7 @@ import '../../widgets/app_snackbar.dart';
 import '../../widgets/centered_auth_scaffold.dart';
 import '../../widgets/code_input_field.dart';
 import '../../widgets/fade_slide_in.dart';
+import '../../widgets/loading_indicator.dart';
 import '../../widgets/premium_card.dart';
 
 class CreatePinScreen extends ConsumerStatefulWidget {
@@ -99,7 +100,7 @@ class _CreatePinScreenState extends ConsumerState<CreatePinScreen> {
               if (_isSaving)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(child: LoadingIndicator()),
                 )
               else if (_firstPin == null)
                 CodeInputField(
