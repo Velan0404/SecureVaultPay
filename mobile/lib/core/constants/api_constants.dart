@@ -31,4 +31,12 @@ class ApiConstants {
       '/transaction-auth/$sessionId/fingerprint-failed';
   static String transactionAuthOtpSend(String sessionId) => '/transaction-auth/$sessionId/otp/send';
   static String transactionAuthOtpVerify(String sessionId) => '/transaction-auth/$sessionId/otp/verify';
+
+  static const String merchantList = '/merchant';
+  static const String merchantSpendingTotal = '/merchant/spending/total';
+  static String merchantDetails(String id) => '/merchant/$id';
+  static String merchantPay(String id) => '/merchant/$id/pay';
+
+  static const String paymentPinStatus = '/payment-pin/status';
+  static const String paymentPinCreate = '/payment-pin';
 }

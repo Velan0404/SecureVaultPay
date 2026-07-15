@@ -191,6 +191,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       onTap: () => context.go('/schedule'),
                                     ),
                                   ),
+                                  Expanded(
+                                    child: QuickActionButton(
+                                      icon: Icons.storefront_outlined,
+                                      label: 'Pay Merchant',
+                                      color: AppColors.categoryTeal,
+                                      onTap: () => context.push('/pay-merchant'),
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 26),

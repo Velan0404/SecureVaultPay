@@ -36,7 +36,8 @@ Authentication
 - JWT
 - bcrypt
 - local_auth
-- Twilio Verify (Transaction Authentication OTP for Main Wallet transfers)
+- Twilio Verify (Transaction Authentication OTP — Main Wallet transfers only, as of Phase 5.1)
+- Payment PIN (bcrypt-hashed, separate from the App PIN — authorizes Merchant Payments)
 
 Version Control
 
@@ -47,7 +48,7 @@ Version Control
 
 ## Current Status
 
-Security Upgrade Phase complete — Main Wallet transfers now require Transaction Authentication (mandatory fingerprint, then a Twilio Verify OTP) before executing, with real-money live testing completed (real SMS sent, verified, transfer executed, replay rejected). The premium dark UI redesign (design system, floating bottom navigation, all screens) and the Wallet Module (Phase 4) are also complete. Authentication, backend infrastructure, and Firebase Cloud Messaging readiness were verified in Phase 3.9. Awaiting confirmation before Phase 5.
+Phase 5.1 (Merchant Payment UX & Payment PIN) complete — Merchant Payments no longer require fingerprint or Twilio OTP; they're authorized by a dedicated 6-digit Payment PIN instead (bcrypt-hashed, its own `PaymentPin` table, completely separate from the App PIN). The first merchant payment prompts Create → Confirm Payment PIN; every payment after that only asks to enter it. The Dashboard's Quick Actions gained a fifth "Pay Merchant" shortcut (Select Purpose Wallet → Merchant List). Main Wallet → Purpose Wallet transfers are entirely unchanged and still require fingerprint + Twilio Verify OTP — that flow remains available for future high-risk operations. Money still only reaches a merchant via Main Wallet → Purpose Wallet → Merchant; Main Wallet is never a selectable payment source. 10 demo merchants are seeded across the 10 required categories; payments atomically debit the Purpose Wallet, write a `MerchantPayment` + `WalletTransaction` record, and appear automatically in Transaction History and the Dashboard's recent activity. The Security Upgrade Phase, the premium dark UI redesign, and the Wallet Module (Phase 4) are also complete. Authentication, backend infrastructure, and Firebase Cloud Messaging readiness were verified in Phase 3.9.
 
 ---
 

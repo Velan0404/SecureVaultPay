@@ -37,7 +37,7 @@ async function startSession({ userId, deviceId, purposeWalletId, amount }, ipAdd
   // wallet.service.js itself.
   const wallet = await walletService.getPurposeWallet(userId, purposeWalletId);
   if (wallet.status !== 'ACTIVE') {
-    throw new AppError(400, 'WALLET_ARCHIVED', 'Cannot transfer into an archived wallet.');
+    throw new AppError(400, 'WALLET_ARCHIVED', 'Cannot use an archived wallet.');
   }
 
   const expiresAt = new Date(Date.now() + SESSION_TTL_MINUTES * 60 * 1000);

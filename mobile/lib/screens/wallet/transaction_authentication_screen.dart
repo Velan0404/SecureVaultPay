@@ -31,6 +31,12 @@ class TransactionAuthRouteArgs {
 /// OTP, then the transfer itself. This screen is the ONLY place a transfer
 /// can be authorized — TransferMoneyScreen only collects the wallet+amount
 /// and hands off here.
+///
+/// Merchant Payments do NOT use this screen (Phase 5.1) — they're authorized
+/// by a Payment PIN instead (see payment_pin_provider.dart and the
+/// create/confirm/enter Payment PIN screens). This fingerprint+OTP flow
+/// remains available for Main Wallet transfers and any future high-risk
+/// operation that needs it.
 class TransactionAuthenticationScreen extends ConsumerStatefulWidget {
   const TransactionAuthenticationScreen({
     super.key,

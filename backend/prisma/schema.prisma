@@ -45,9 +45,10 @@ enum WalletTransactionStatus {
 }
 
 // State machine for Transaction Authentication (fingerprint-then-OTP,
-// required before any Main Wallet -> Purpose Wallet transfer). No OTP code
-// is ever stored here — only status/timestamps, since Twilio Verify owns
-// generation and validation entirely.
+// required before any Main Wallet -> Purpose Wallet transfer, and — as of
+// the Merchant Payment module — before any Purpose Wallet -> Merchant
+// payment too). No OTP code is ever stored here — only status/timestamps,
+// since Twilio Verify owns generation and validation entirely.
 enum TransactionAuthStatus {
   PENDING_FINGERPRINT
   FINGERPRINT_CONFIRMED
@@ -56,6 +57,29 @@ enum TransactionAuthStatus {
   COMPLETED
   EXPIRED
   CANCELLED
+}
+
+enum MerchantCategory {
+  GROCERY
+  FOOD
+  FUEL
+  SHOPPING
+  ENTERTAINMENT
+  HEALTHCARE
+  EDUCATION
+  UTILITY
+  TRAVEL
+  OTHER
+}
+
+enum MerchantStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum MerchantPaymentStatus {
+  SUCCESS
+  FAILED
 }
 
 model User {
@@ -80,6 +104,22 @@ model User {
   mainWallet              MainWallet?
   walletTransactions      WalletTransaction[]
   transactionAuthSessions TransactionAuthSession[]
+  merchantPayments        MerchantPayment[]
+  paymentPin              PaymentPin?
+}
+
+// A dedicated, separate credential from User.pinHash (the App PIN, which
+// only unlocks the app). The Payment PIN authorizes money movement — every
+// merchant payment is verified against this hash server-side, never against
+// a client-cached copy. `userId @unique` enforces "only one Payment PIN per
+// user, created once."
+model PaymentPin {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  pinHash   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model TransactionAuthSession {
@@ -88,6 +128,11 @@ model TransactionAuthSession {
   user                   User                  @relation(fields: [userId], references: [id])
   deviceId               String
   purposeWalletId        String
+  // null = a Main Wallet -> Purpose Wallet transfer session (original,
+  // unchanged behavior). Set = a Purpose Wallet -> Merchant payment session.
+  // A single session can only ever authorize one or the other.
+  merchantId             String?
+  merchant               Merchant?             @relation(fields: [merchantId], references: [id])
   amount                 Decimal               @db.Decimal(14, 2)
   status                 TransactionAuthStatus @default(PENDING_FINGERPRINT)
   otpAttempts            Int                   @default(0)
@@ -97,6 +142,33 @@ model TransactionAuthSession {
   completedAt            DateTime?
   expiresAt              DateTime
   createdAt              DateTime              @default(now())
+}
+
+model Merchant {
+  id               String           @id @default(uuid())
+  merchantName     String
+  merchantCategory MerchantCategory
+  merchantCode     String           @unique
+  merchantLogo     String?
+  status           MerchantStatus   @default(ACTIVE)
+  createdAt        DateTime         @default(now())
+
+  payments                MerchantPayment[]
+  transactionAuthSessions TransactionAuthSession[]
+}
+
+model MerchantPayment {
+  id                       String                @id @default(uuid())
+  userId                   String
+  user                     User                  @relation(fields: [userId], references: [id])
+  purposeWalletId          String
+  purposeWallet            PurposeWallet         @relation(fields: [purposeWalletId], references: [id])
+  merchantId               String
+  merchant                 Merchant              @relation(fields: [merchantId], references: [id])
+  amount                   Decimal               @db.Decimal(14, 2)
+  status                   MerchantPaymentStatus @default(SUCCESS)
+  transactionAuthSessionId String?
+  createdAt                DateTime              @default(now())
 }
 
 model MainWallet {
@@ -126,8 +198,9 @@ model PurposeWallet {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
-  transfers    WalletTransfer[]
-  transactions WalletTransaction[]
+  transfers        WalletTransfer[]
+  transactions     WalletTransaction[]
+  merchantPayments MerchantPayment[]
 }
 
 model WalletTransfer {

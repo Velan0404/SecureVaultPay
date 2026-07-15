@@ -13,6 +13,7 @@ import '../../widgets/fade_slide_in.dart';
 import '../../widgets/loading_indicator.dart';
 import '../../widgets/premium_card.dart';
 import '../../widgets/primary_button.dart';
+import '../../widgets/secondary_button.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/wallet_icons.dart';
 import '../../widgets/wallet_transaction_tile.dart';
@@ -165,6 +166,12 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
                               PrimaryButton(
                                 label: 'Transfer from Main Wallet',
                                 onPressed: () => context.push('/wallet/transfer', extra: _wallet),
+                              ),
+                              const SizedBox(height: 12),
+                              SecondaryButton(
+                                label: 'Pay a Merchant',
+                                icon: Icons.storefront_outlined,
+                                onPressed: () => context.push('/merchants', extra: _wallet),
                               ),
                             ],
                           ),

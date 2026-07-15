@@ -14,6 +14,14 @@ import '../screens/auth/register_screen.dart';
 import '../screens/auth/reset_password_screen.dart';
 import '../screens/auth/splash_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
+import '../screens/merchant/confirm_payment_pin_screen.dart';
+import '../screens/merchant/create_payment_pin_screen.dart';
+import '../screens/merchant/enter_payment_pin_screen.dart';
+import '../screens/merchant/merchant_details_screen.dart';
+import '../screens/merchant/merchant_list_screen.dart';
+import '../screens/merchant/merchant_payment_result_screen.dart';
+import '../screens/merchant/merchant_payment_screen.dart';
+import '../screens/merchant/select_purpose_wallet_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/schedule/schedule_screen.dart';
 import '../screens/wallet/main_wallet_screen.dart';
@@ -202,6 +210,56 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state,
           PurposeWalletFormScreen(existingWallet: state.extra as PurposeWalletModel?),
         ),
+      ),
+      GoRoute(
+        path: '/merchants',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, MerchantListScreen(wallet: state.extra! as PurposeWalletModel)),
+      ),
+      // Every static /merchants/... route MUST be declared before /merchants/:id
+      // below — go_router tries top-level routes in list order, and /merchants/:id
+      // matches ANY single path segment (including "payment-result"), so a static
+      // route declared after it would never be reached and its `extra` would be
+      // force-cast to the wrong type by /merchants/:id's screen instead. This
+      // exact ordering bug (once caused a MerchantPaymentResultArgs -> PurposeWalletModel
+      // cast crash) is why this route sits here rather than further down the list.
+      GoRoute(
+        path: '/merchants/payment-result',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, MerchantPaymentResultScreen(args: state.extra! as MerchantPaymentResultArgs)),
+      ),
+      GoRoute(
+        path: '/merchants/:id',
+        pageBuilder: (context, state) => _fadeThroughPage(
+          state,
+          MerchantDetailsScreen(merchantId: state.pathParameters['id']!, wallet: state.extra! as PurposeWalletModel),
+        ),
+      ),
+      GoRoute(
+        path: '/merchants/:id/pay',
+        pageBuilder: (context, state) {
+          final args = state.extra! as MerchantPaymentRouteArgs;
+          return _fadeThroughPage(state, MerchantPaymentScreen(merchant: args.merchant, wallet: args.wallet));
+        },
+      ),
+      GoRoute(
+        path: '/pay-merchant',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const SelectPurposeWalletScreen()),
+      ),
+      GoRoute(
+        path: '/payment-pin/create',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, CreatePaymentPinScreen(args: state.extra! as PaymentPinFlowArgs)),
+      ),
+      GoRoute(
+        path: '/payment-pin/confirm',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, ConfirmPaymentPinScreen(args: state.extra! as ConfirmPaymentPinArgs)),
+      ),
+      GoRoute(
+        path: '/payment-pin/enter',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, EnterPaymentPinScreen(args: state.extra! as PaymentPinFlowArgs)),
       ),
     ],
   );

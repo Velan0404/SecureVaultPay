@@ -30,7 +30,7 @@
 ## Dashboard
 
 - [x] Home Screen
-- [x] Quick Actions
+- [x] Quick Actions (Add Wallet, Transfer, History, Schedule, Pay Merchant)
 - [x] Recent Transactions
 
 ---
@@ -52,17 +52,27 @@
 
 - [x] Fingerprint confirmation (on-device, mandatory, max 3 attempts)
 - [x] Twilio Verify OTP (generation/validation entirely on Twilio's side, 5-minute expiry, 5 attempts)
-- [x] Session-gated Main Wallet -> Purpose Wallet transfers (single-use, race-condition safe)
+- [x] Session-gated Main Wallet -> Purpose Wallet transfers (single-use, race-condition safe) — scope narrowed back to Wallet Transfer only as of Phase 5.1 (Merchant Payment now uses the Payment PIN instead)
 - [x] Real-money live test completed: real OTP sent + verified + transfer executed + replay rejected
 - [x] Firebase push notification on successful transfer (real Admin SDK integration)
 - [x] Audit logging (user, device, time, amount, wallet, transaction id) + analytics events
 
 ---
 
+## Payment PIN
+
+- [x] Dedicated 6-digit Payment PIN, separate from the App PIN (own `PaymentPin` table, bcrypt-hashed, never stored in plaintext)
+- [x] Authorizes Merchant Payments only — never replaces login password, App PIN, or fingerprint
+- [x] Created once, first payment only (Create -> Confirm -> stored -> payment completes in the same flow)
+- [x] Verified server-side on every merchant payment (never a client-cached check)
+- [x] Create/Confirm/Enter Payment PIN screens matching the App PIN's design
+
+---
+
 ## Payments
 
 - [ ] QR Payment
-- [ ] Merchant Payment
+- [x] Merchant Payment (Main Wallet -> Purpose Wallet -> Merchant only, Main Wallet never selectable; 10 demo merchants seeded; authorized by Payment PIN, no fingerprint/OTP)
 - [ ] Bill Payment
 
 ---
@@ -85,7 +95,7 @@
 
 ## Notifications
 
-- [x] Payment Success (real Firebase push on successful transfer)
+- [x] Payment Success (real Firebase push on successful transfer or merchant payment)
 - [ ] Scheduled Payment Reminder
 
 ---

@@ -122,6 +122,30 @@ const otpVerifyLimiter = rateLimit({
   handler: rateLimitedResponse,
 });
 
+// Payment PIN creation — a one-time setup action, generous but still capped.
+const paymentPinCreateLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
+// Guards the Merchant Payment route against Payment PIN brute-forcing —
+// same shape as pinVerifyLimiter (App PIN), keyed by user like the
+// Transaction Authentication limiters since this route always runs behind
+// `authenticate`.
+const paymentPinVerifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
 module.exports = {
   loginLimiter,
   registerLimiter,
@@ -134,4 +158,6 @@ module.exports = {
   transactionAuthStartLimiter,
   otpSendLimiter,
   otpVerifyLimiter,
+  paymentPinCreateLimiter,
+  paymentPinVerifyLimiter,
 };
