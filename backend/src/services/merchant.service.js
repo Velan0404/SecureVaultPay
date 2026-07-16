@@ -100,4 +100,4 @@ async function getTotalSpent(userId) {
   return total ?? new Prisma.Decimal(0);
 }
 
-module.exports = { listMerchants, getMerchant, pay, getTotalSpent };
+module.exports = { toPublicMerchant, listMerchants, getMerchant, pay, getTotalSpent };

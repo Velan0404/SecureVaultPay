@@ -37,6 +37,9 @@ enum WalletTransactionType {
   PURPOSE_PAYMENT
   REFUND
   ADJUSTMENT
+  // Phase 7 — Personal QR (User -> User, into the receiver's Main Wallet).
+  PERSONAL_PAYMENT_SENT
+  PERSONAL_PAYMENT_RECEIVED
 }
 
 enum WalletTransactionStatus {
@@ -82,6 +85,47 @@ enum MerchantPaymentStatus {
   FAILED
 }
 
+enum MerchantQrStatus {
+  ACTIVE
+  USED
+  EXPIRED
+}
+
+// Phase 7 (Scheduled Payments) — a category/icon label only, orthogonal to
+// whether the schedule's destination is a Merchant or another User.
+enum ScheduledPaymentType {
+  RENT
+  ELECTRICITY
+  WATER
+  INTERNET
+  MOBILE_RECHARGE
+  SUBSCRIPTION
+  EMI
+  INSURANCE
+  SAVINGS
+  CUSTOM
+}
+
+enum ScheduledPaymentFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM // interval in days, stored in ScheduledPayment.customIntervalDays
+}
+
+enum ScheduledPaymentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED // reached endDate naturally
+  CANCELLED // user stopped it
+}
+
+enum ScheduledPaymentExecutionStatus {
+  SUCCESS
+  FAILED
+}
+
 model User {
   id                String             @id @default(uuid())
   fullName          String
@@ -97,15 +141,24 @@ model User {
   // used — set via the transaction-auth module, not the registration flow.
   phoneNumber String?
 
-  devices                 Device[]
-  refreshTokens           RefreshToken[]
-  auditLogs               AuditLog[]
-  passwordResetOtps       PasswordResetOtp[]
-  mainWallet              MainWallet?
-  walletTransactions      WalletTransaction[]
-  transactionAuthSessions TransactionAuthSession[]
-  merchantPayments        MerchantPayment[]
-  paymentPin              PaymentPin?
+  // Permanent personal-payment identity code (Phase 7) — e.g. "SVP-7K9X2QRT".
+  // Lazily generated on first "My QR" request, like MainWallet/PaymentPin,
+  // rather than backfilled for existing users at migration time.
+  secureVaultId String? @unique
+
+  devices                  Device[]
+  refreshTokens            RefreshToken[]
+  auditLogs                AuditLog[]
+  passwordResetOtps        PasswordResetOtp[]
+  mainWallet               MainWallet?
+  walletTransactions       WalletTransaction[]
+  transactionAuthSessions  TransactionAuthSession[]
+  merchantPayments         MerchantPayment[]
+  paymentPin               PaymentPin?
+  personalPaymentsSent     PersonalPayment[] @relation("PersonalPaymentsSent")
+  personalPaymentsReceived PersonalPayment[] @relation("PersonalPaymentsReceived")
+  scheduledPayments         ScheduledPayment[]
+  scheduledPaymentsReceived ScheduledPayment[] @relation("ScheduledPaymentsReceived")
 }
 
 // A dedicated, separate credential from User.pinHash (the App PIN, which
@@ -155,6 +208,28 @@ model Merchant {
 
   payments                MerchantPayment[]
   transactionAuthSessions TransactionAuthSession[]
+  qrCodes                 MerchantQrCode[]
+  scheduledPayments       ScheduledPayment[]
+}
+
+// A dynamic, single-use, time-boxed QR token (Phase 6) — the demo stand-in
+// for a real merchant terminal, which would normally regenerate its
+// displayed QR periodically for exactly this reason. Scanning only reads
+// this record (see qr.service.js's validate()); paying atomically
+// compare-and-swaps status ACTIVE -> USED, which is what makes a second
+// scan/payment of the same QR (a replay) impossible to complete twice.
+model MerchantQrCode {
+  id         String           @id @default(uuid())
+  merchantId String
+  merchant   Merchant         @relation(fields: [merchantId], references: [id])
+  status     MerchantQrStatus @default(ACTIVE)
+  expiresAt  DateTime
+  usedAt     DateTime?
+  // Nullable, no formal FK — same pattern as MerchantPayment.transactionAuthSessionId
+  // (Phase 5): an informational link to the payment this QR produced,
+  // without touching the MerchantPayment model at all.
+  merchantPaymentId String?
+  createdAt         DateTime @default(now())
 }
 
 model MerchantPayment {
@@ -169,6 +244,23 @@ model MerchantPayment {
   status                   MerchantPaymentStatus @default(SUCCESS)
   transactionAuthSessionId String?
   createdAt                DateTime              @default(now())
+}
+
+// Phase 7 — Personal QR: User -> User, always landing in the receiver's Main
+// Wallet. Reuses MerchantPaymentStatus (identical SUCCESS/FAILED shape)
+// rather than declaring a duplicate enum.
+model PersonalPayment {
+  id                    String                @id @default(uuid())
+  senderId              String
+  sender                User                  @relation("PersonalPaymentsSent", fields: [senderId], references: [id])
+  receiverId            String
+  receiver              User                  @relation("PersonalPaymentsReceived", fields: [receiverId], references: [id])
+  senderPurposeWalletId String
+  senderPurposeWallet   PurposeWallet         @relation(fields: [senderPurposeWalletId], references: [id])
+  amount                Decimal               @db.Decimal(14, 2)
+  note                  String?
+  status                MerchantPaymentStatus @default(SUCCESS)
+  createdAt             DateTime              @default(now())
 }
 
 model MainWallet {
@@ -201,6 +293,8 @@ model PurposeWallet {
   transfers        WalletTransfer[]
   transactions     WalletTransaction[]
   merchantPayments MerchantPayment[]
+  personalPayments PersonalPayment[]
+  scheduledPayments ScheduledPayment[]
 }
 
 model WalletTransfer {
@@ -278,4 +372,56 @@ model AuditLog {
   metadata  Json?
   ipAddress String?
   createdAt DateTime @default(now())
+}
+
+// Phase 7 — Scheduled Payments & Automation. Executed by scheduler.service.js
+// (node-cron), which calls the existing, unmodified merchantService.pay()/
+// personalPaymentService.pay() directly — no Payment PIN at execution time,
+// only at creation/editing (see paymentPin.middleware.js on the create/edit
+// routes). Exactly one of merchantId/receiverUserId is set, and never changes
+// after creation (editing a schedule cannot change who it pays).
+model ScheduledPayment {
+  id                 String                    @id @default(uuid())
+  userId             String
+  user               User                      @relation(fields: [userId], references: [id])
+  title              String
+  paymentType        ScheduledPaymentType      @default(CUSTOM)
+  amount             Decimal                   @db.Decimal(14, 2)
+  frequency          ScheduledPaymentFrequency
+  customIntervalDays Int?
+  purposeWalletId    String
+  purposeWallet      PurposeWallet             @relation(fields: [purposeWalletId], references: [id])
+  merchantId         String?
+  merchant           Merchant?                 @relation(fields: [merchantId], references: [id])
+  receiverUserId     String?
+  receiverUser       User?                     @relation("ScheduledPaymentsReceived", fields: [receiverUserId], references: [id])
+  note               String?
+  startDate          DateTime
+  nextExecution      DateTime
+  lastExecution      DateTime?
+  // Set to the nextExecution value the last "upcoming payment" reminder
+  // covered — dedupes the reminder per cycle without a separate boolean,
+  // since nextExecution always changes after each run.
+  lastReminderFor    DateTime?
+  endDate            DateTime?
+  status             ScheduledPaymentStatus    @default(ACTIVE)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+
+  executions ScheduledPaymentExecution[]
+}
+
+// One row per cron-tick attempt at a due ScheduledPayment — the audit trail
+// an "Execution History" screen reads. paymentId is an informational link
+// only (no FK), same pattern as MerchantQrCode.merchantPaymentId.
+model ScheduledPaymentExecution {
+  id                 String                          @id @default(uuid())
+  scheduledPaymentId String
+  scheduledPayment   ScheduledPayment                @relation(fields: [scheduledPaymentId], references: [id])
+  scheduledFor       DateTime
+  executedAt         DateTime                        @default(now())
+  status             ScheduledPaymentExecutionStatus
+  amount             Decimal                         @db.Decimal(14, 2)
+  failureReason      String?
+  paymentId          String?
 }

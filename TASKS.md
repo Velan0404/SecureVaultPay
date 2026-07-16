@@ -30,8 +30,9 @@
 ## Dashboard
 
 - [x] Home Screen
-- [x] Quick Actions (Add Wallet, Transfer, History, Schedule, Pay Merchant)
+- [x] Quick Actions (Add Wallet, Transfer, History, Schedule, Pay, Scan QR) — "Pay Merchant" removed as of Phase 7.1 (redundant with Scan QR -> Merchant QR -> Merchant Payment); replaced with "Pay" (Person -> Person, by mobile number search)
 - [x] Recent Transactions
+- [x] Scheduled Payments summary (Today / Upcoming 7d total / Missed stats + next few schedules)
 
 ---
 
@@ -71,18 +72,22 @@
 
 ## Payments
 
-- [ ] QR Payment
+- [x] QR Payment (dynamic, single-use, 10-minute-expiry demo QR per merchant; same Main Wallet -> Purpose Wallet -> Merchant flow and Payment PIN as tap-to-pay, no biometric/OTP; replay/duplicate prevented by an atomic ACTIVE->USED compare-and-swap)
 - [x] Merchant Payment (Main Wallet -> Purpose Wallet -> Merchant only, Main Wallet never selectable; 10 demo merchants seeded; authorized by Payment PIN, no fingerprint/OTP)
+- [x] Personal QR / Send to User (permanent per-user QR identifying a SecureVault Pay account; Main Wallet -> Purpose Wallet -> Receiver's Main Wallet, authorized by the same Payment PIN, no biometric/OTP; both sender and receiver get a push notification and a Wallet Transaction row)
+- [x] Search User by Mobile Number (Dashboard "Pay" -> enter a 10-digit number, auto-formatted to +91XXXXXXXXXX same as Registration -> backend lookup -> found user reuses the exact existing Personal Payment Preview/Select Wallet/Confirm/Payment PIN flow; "No SecureVault Pay account found." when there's no match)
 - [ ] Bill Payment
 
 ---
 
 ## Scheduled Payments
 
-- [ ] Create Schedule
-- [ ] Edit Schedule
-- [ ] Cancel Schedule
-- [ ] Scheduler
+- [x] Create Schedule (Rent, Electricity, Water, Internet, Mobile Recharge, Subscription, EMI, Insurance, Savings, Custom; destination is a Merchant or another SecureVault Pay user, picked once and fixed thereafter; Payment PIN required)
+- [x] Edit Schedule (amount, frequency, end date, title, note, Purpose Wallet — destination and category are fixed; Payment PIN required)
+- [x] Pause / Resume Schedule (no Payment PIN — only ever reduces what will be charged)
+- [x] Cancel Schedule (soft, no Payment PIN)
+- [x] Scheduler (node-cron, every minute; automatically executes due payments by calling the existing, unmodified `merchantService.pay()`/`personalPaymentService.pay()` directly — no Payment PIN at execution time; atomic claim-before-pay prevents double-execution; insufficient-balance/inactive-destination failures are logged and notified, then the schedule advances to its next cycle rather than retrying every tick)
+- [x] Execution History (per-schedule log of every cron-tick attempt: success/failure, amount, reason)
 
 ---
 
@@ -95,14 +100,16 @@
 
 ## Notifications
 
-- [x] Payment Success (real Firebase push on successful transfer or merchant payment)
-- [ ] Scheduled Payment Reminder
+- [x] Payment Success (real Firebase push on successful transfer, merchant payment, or Personal Payment — sender and receiver each get their own message)
+- [x] Scheduled Payment Reminder (24h-ahead "upcoming payment" push, deduped per due cycle)
+- [x] Scheduled Payment Failed / Insufficient Balance / Ended (automatic-execution outcomes, pushed by the scheduler itself)
 
 ---
 
 ## Profile
 
 - [x] User Profile (real name/email/biometric status/wallet count)
+- [x] My QR (permanent Personal QR — name, mobile number, SecureVault ID; Share QR UI-only for now)
 - [x] Transfer verification phone number
 - [ ] Settings (notifications, privacy — coming-soon placeholders)
 

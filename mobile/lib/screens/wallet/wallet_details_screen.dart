@@ -173,6 +173,12 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
                                 icon: Icons.storefront_outlined,
                                 onPressed: () => context.push('/merchants', extra: _wallet),
                               ),
+                              const SizedBox(height: 12),
+                              SecondaryButton(
+                                label: 'Scan QR to Pay',
+                                icon: Icons.qr_code_scanner,
+                                onPressed: () => context.push('/qr/scan', extra: _wallet),
+                              ),
                             ],
                           ),
                         ),

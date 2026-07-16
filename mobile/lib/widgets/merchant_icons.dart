@@ -17,6 +17,12 @@ class MerchantIcons {
     'local_gas_station': Icons.local_gas_station_outlined,
     'local_pharmacy': Icons.local_pharmacy_outlined,
     'train': Icons.train_outlined,
+    'bolt': Icons.bolt_outlined,
+    'water_drop': Icons.water_drop_outlined,
+    'wifi': Icons.wifi,
+    'sim_card': Icons.sim_card_outlined,
+    'shield': Icons.shield_outlined,
+    'account_balance': Icons.account_balance_outlined,
   };
 
   static IconData resolve(String? name) => byName[name] ?? Icons.storefront_outlined;

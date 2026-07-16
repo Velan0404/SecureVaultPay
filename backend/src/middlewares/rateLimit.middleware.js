@@ -146,6 +146,60 @@ const paymentPinVerifyLimiter = rateLimit({
   handler: rateLimitedResponse,
 });
 
+// Demo QR generation — a dev-only convenience, generous but still capped.
+const qrGenerateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
+// Guards QR validation against qrId enumeration/brute-forcing.
+const qrValidateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
+// Guards Personal Payment receiver lookup against userId enumeration.
+const personalPaymentLookupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
+// Guards Personal Payment search-by-phone against phone-number enumeration
+// — this endpoint answers "does an account exist for this number", exactly
+// the kind of oracle a scraper would want to hammer across a whole range.
+const personalPaymentSearchLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
+// Guards Scheduled Payment create/edit — a generous but still-capped limit
+// on a comparatively low-frequency user action (unlike PIN verification,
+// this isn't a brute-force target, just abuse prevention).
+const scheduledPaymentCreateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
 module.exports = {
   loginLimiter,
   registerLimiter,
@@ -160,4 +214,9 @@ module.exports = {
   otpVerifyLimiter,
   paymentPinCreateLimiter,
   paymentPinVerifyLimiter,
+  qrGenerateLimiter,
+  qrValidateLimiter,
+  personalPaymentLookupLimiter,
+  personalPaymentSearchLimiter,
+  scheduledPaymentCreateLimiter,
 };

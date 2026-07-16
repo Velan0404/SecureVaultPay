@@ -20,6 +20,10 @@ IconData _iconFor(String type) {
       return Icons.delete_outline;
     case 'PURPOSE_PAYMENT':
       return Icons.storefront_outlined;
+    case 'PERSONAL_PAYMENT_SENT':
+      return Icons.arrow_upward_outlined;
+    case 'PERSONAL_PAYMENT_RECEIVED':
+      return Icons.arrow_downward_outlined;
     case 'REFUND':
       return Icons.replay_outlined;
     default:
@@ -43,6 +47,10 @@ String _labelFor(String type) {
       return 'Wallet deleted';
     case 'PURPOSE_PAYMENT':
       return 'Payment';
+    case 'PERSONAL_PAYMENT_SENT':
+      return 'Money sent';
+    case 'PERSONAL_PAYMENT_RECEIVED':
+      return 'Money received';
     case 'REFUND':
       return 'Refund';
     case 'ADJUSTMENT':

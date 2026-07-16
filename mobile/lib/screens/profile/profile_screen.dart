@@ -6,6 +6,7 @@ import '../../core/errors/app_exception.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/transaction_auth_provider.dart';
 import '../../providers/wallet_provider.dart';
+import '../../theme/app_radius.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_snackbar.dart';
 import '../../widgets/fade_slide_in.dart';
@@ -121,6 +122,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  _MyQrButton(onTap: () => context.push('/my-qr')),
                 ],
               ),
             ),
@@ -168,6 +171,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             subtitle: 'Coming soon',
             onTap: () => _comingSoon('Privacy & Data controls'),
           ),
+          ProfileMenuTile(
+            icon: Icons.developer_mode_outlined,
+            iconColor: AppColors.categoryGold,
+            title: 'Developer Tools',
+            subtitle: 'Demo QR Generator and other testing utilities',
+            onTap: () => context.push('/profile/developer-tools'),
+          ),
           const SizedBox(height: 12),
           TextButton.icon(
             onPressed: () => ref.read(authProvider.notifier).logout(),
@@ -175,6 +185,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             label: const Text('Log out', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w600)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The "My QR" shortcut on the right side of the Profile hero card — every
+/// user's permanent Personal QR (see MyQrScreen), styled to sit on top of
+/// the hero gradient like the avatar circle next to it.
+class _MyQrButton extends StatelessWidget {
+  const _MyQrButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadius.mdRadius,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.14),
+          borderRadius: AppRadius.mdRadius,
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.qr_code_2, color: Colors.white, size: 22),
+            SizedBox(height: 2),
+            Text('My QR', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }

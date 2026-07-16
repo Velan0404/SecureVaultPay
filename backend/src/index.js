@@ -5,9 +5,11 @@ const { assertEnv } = require('./config/env');
 assertEnv();
 
 const app = require('./app');
+const scheduler = require('./services/scheduler.service');
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`SecureVault Pay backend running on port ${PORT}`);
+  scheduler.start();
 });

@@ -15,6 +15,16 @@ const MERCHANTS = [
   { merchantCode: 'INDIAN_OIL', merchantName: 'Indian Oil', merchantCategory: 'FUEL', merchantLogo: 'local_gas_station' },
   { merchantCode: 'APOLLO_PHARMACY', merchantName: 'Apollo Pharmacy', merchantCategory: 'HEALTHCARE', merchantLogo: 'local_pharmacy' },
   { merchantCode: 'IRCTC', merchantName: 'IRCTC', merchantCategory: 'TRAVEL', merchantLogo: 'train' },
+  // Phase 7 (Scheduled Payments) — UTILITY/OTHER merchants so Electricity,
+  // Water, Internet, Mobile Recharge, Insurance, and EMI schedules have a
+  // real merchant to target out of the box (no UTILITY-category merchant
+  // existed before this, despite the enum value already existing).
+  { merchantCode: 'STATE_ELECTRICITY', merchantName: 'State Electricity Board', merchantCategory: 'UTILITY', merchantLogo: 'bolt' },
+  { merchantCode: 'MUNICIPAL_WATER', merchantName: 'Municipal Water Works', merchantCategory: 'UTILITY', merchantLogo: 'water_drop' },
+  { merchantCode: 'AIRTEL_BROADBAND', merchantName: 'Airtel Broadband', merchantCategory: 'UTILITY', merchantLogo: 'wifi' },
+  { merchantCode: 'AIRTEL_PREPAID', merchantName: 'Airtel Prepaid Recharge', merchantCategory: 'UTILITY', merchantLogo: 'sim_card' },
+  { merchantCode: 'LIC_INSURANCE', merchantName: 'LIC Insurance', merchantCategory: 'OTHER', merchantLogo: 'shield' },
+  { merchantCode: 'HDFC_LOAN_EMI', merchantName: 'HDFC Loan EMI', merchantCategory: 'OTHER', merchantLogo: 'account_balance' },
 ];
 
 async function main() {

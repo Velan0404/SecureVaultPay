@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/utils/currency_formatter.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/scheduled_payment_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_theme.dart';
@@ -13,6 +14,7 @@ import '../../widgets/loading_indicator.dart';
 import '../../widgets/premium_card.dart';
 import '../../widgets/purpose_wallet_card.dart';
 import '../../widgets/quick_action_button.dart';
+import '../../widgets/scheduled_payment_tile.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/stat_tile.dart';
 import '../../widgets/wallet_transaction_tile.dart';
@@ -28,7 +30,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(walletProvider.notifier).loadDashboard());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(walletProvider.notifier).loadDashboard();
+      ref.read(scheduledPaymentProvider.notifier).loadDashboard();
+    });
   }
 
   @override
@@ -36,6 +41,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final user = ref.watch(authProvider).user;
     final state = ref.watch(walletProvider);
     final dashboard = state.dashboard;
+    final scheduleDashboard = ref.watch(scheduledPaymentProvider).dashboard;
 
     return Scaffold(
       body: SafeArea(
@@ -193,10 +199,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   ),
                                   Expanded(
                                     child: QuickActionButton(
-                                      icon: Icons.storefront_outlined,
-                                      label: 'Pay Merchant',
+                                      icon: Icons.send_rounded,
+                                      label: 'Pay',
                                       color: AppColors.categoryTeal,
-                                      onTap: () => context.push('/pay-merchant'),
+                                      onTap: dashboard.purposeWallets.isEmpty ? null : () => context.push('/personal-payment/search'),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: QuickActionButton(
+                                      icon: Icons.qr_code_scanner,
+                                      label: 'Scan QR',
+                                      color: AppColors.categoryBlue,
+                                      onTap: () => context.push('/qr/scan'),
                                     ),
                                   ),
                                 ],
@@ -236,6 +250,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     );
                                   },
                                 ),
+                              const SizedBox(height: 26),
+                              SectionHeader(
+                                title: 'Scheduled Payments',
+                                actionLabel: 'View all',
+                                onAction: () => context.push('/schedule'),
+                              ),
+                              const SizedBox(height: 12),
+                              if (scheduleDashboard == null)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: Center(child: LoadingIndicator(size: 24)),
+                                )
+                              else ...[
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: StatTile(label: 'Today', value: '${scheduleDashboard.today.length}'),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: StatTile(
+                                        label: 'Upcoming (7d)',
+                                        value: CurrencyFormatter.format(scheduleDashboard.stats.upcoming7DayTotal),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: StatTile(label: 'Missed', value: '${scheduleDashboard.stats.missedCount}'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                if ([...scheduleDashboard.today, ...scheduleDashboard.upcoming, ...scheduleDashboard.missed]
+                                    .isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    child: Text('Nothing scheduled yet.', style: TextStyle(color: AppColors.textSecondary)),
+                                  )
+                                else
+                                  ...[...scheduleDashboard.today, ...scheduleDashboard.upcoming, ...scheduleDashboard.missed]
+                                      .take(3)
+                                      .map(
+                                        (schedule) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 10),
+                                          child: PremiumCard.flat(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                            onTap: () => context.push('/schedule/${schedule.id}'),
+                                            child: ScheduledPaymentTile(schedule: schedule),
+                                          ),
+                                        ),
+                                      ),
+                              ],
                               const SizedBox(height: 26),
                               SectionHeader(
                                 title: 'Recent Transactions',

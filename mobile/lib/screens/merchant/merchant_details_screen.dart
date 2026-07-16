@@ -59,7 +59,18 @@ class _MerchantDetailsScreenState extends ConsumerState<MerchantDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_merchant?.merchantName ?? 'Merchant')),
+      appBar: AppBar(
+        title: Text(_merchant?.merchantName ?? 'Merchant'),
+        actions: _merchant == null
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.qr_code_2_outlined),
+                  tooltip: 'Show demo QR',
+                  onPressed: () => context.push('/merchants/${widget.merchantId}/qr', extra: _merchant),
+                ),
+              ],
+      ),
       body: _isLoading
           ? const LoadingScreen()
           : _loadError != null

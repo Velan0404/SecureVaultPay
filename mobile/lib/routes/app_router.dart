@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../models/merchant_model.dart';
+import '../models/personal_payment_receiver_model.dart';
 import '../models/purpose_wallet_model.dart';
+import '../models/qr_validation_model.dart';
+import '../models/scheduled_payment_model.dart';
 import '../providers/auth_provider.dart';
 import '../screens/analytics/analytics_screen.dart';
 import '../screens/auth/create_pin_screen.dart';
@@ -16,14 +20,30 @@ import '../screens/auth/splash_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/merchant/confirm_payment_pin_screen.dart';
 import '../screens/merchant/create_payment_pin_screen.dart';
+import '../screens/merchant/demo_merchant_qr_screen.dart';
+import '../screens/merchant/demo_qr_generator_screen.dart';
 import '../screens/merchant/enter_payment_pin_screen.dart';
 import '../screens/merchant/merchant_details_screen.dart';
 import '../screens/merchant/merchant_list_screen.dart';
 import '../screens/merchant/merchant_payment_result_screen.dart';
 import '../screens/merchant/merchant_payment_screen.dart';
+import '../screens/merchant/qr_merchant_preview_screen.dart';
+import '../screens/merchant/qr_payment_confirm_screen.dart';
+import '../screens/merchant/qr_scanner_screen.dart';
 import '../screens/merchant/select_purpose_wallet_screen.dart';
+import '../screens/personal_payment/my_qr_screen.dart';
+import '../screens/personal_payment/personal_payment_confirm_screen.dart';
+import '../screens/personal_payment/personal_payment_preview_screen.dart';
+import '../screens/personal_payment/search_results_screen.dart';
+import '../screens/personal_payment/search_user_screen.dart';
+import '../screens/profile/developer_tools_screen.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/schedule/create_schedule_screen.dart';
+import '../screens/schedule/edit_schedule_screen.dart';
+import '../screens/schedule/schedule_details_screen.dart';
+import '../screens/schedule/schedule_execution_history_screen.dart';
 import '../screens/schedule/schedule_screen.dart';
+import '../screens/schedule/select_merchant_screen.dart';
 import '../screens/wallet/main_wallet_screen.dart';
 import '../screens/wallet/purpose_wallet_form_screen.dart';
 import '../screens/wallet/transaction_authentication_screen.dart';
@@ -244,7 +264,122 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/pay-merchant',
-        pageBuilder: (context, state) => _fadeThroughPage(state, const SelectPurposeWalletScreen()),
+        pageBuilder: (context, state) {
+          // Extra is a QrValidationModel only when arriving from
+          // QrMerchantPreviewScreen's Continue button; null for the plain
+          // Dashboard "Pay Merchant" entry point (unchanged default).
+          final validation = state.extra as QrValidationModel?;
+          return _fadeThroughPage(
+            state,
+            SelectPurposeWalletScreen(
+              onSelect: validation == null
+                  ? null
+                  : (context, wallet) => context.push(
+                        '/qr/confirm',
+                        extra: QrPaymentConfirmArgs(validation: validation, wallet: wallet),
+                      ),
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/merchants/:id/qr',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, DemoMerchantQrScreen(merchant: state.extra! as MerchantModel)),
+      ),
+      GoRoute(
+        path: '/qr/scan',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, QrScannerScreen(preselectedWallet: state.extra as PurposeWalletModel?)),
+      ),
+      GoRoute(
+        path: '/qr/preview',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, QrMerchantPreviewScreen(args: state.extra! as QrPreviewRouteArgs)),
+      ),
+      GoRoute(
+        path: '/qr/confirm',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, QrPaymentConfirmScreen(args: state.extra! as QrPaymentConfirmArgs)),
+      ),
+      GoRoute(
+        path: '/my-qr',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const MyQrScreen()),
+      ),
+      GoRoute(
+        path: '/personal-payment/search',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const SearchUserScreen()),
+      ),
+      GoRoute(
+        path: '/personal-payment/search-results',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, SearchResultsScreen(phone: state.extra! as String)),
+      ),
+      GoRoute(
+        path: '/personal-payment/preview',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, PersonalPaymentPreviewScreen(args: state.extra! as PersonalPaymentScanArgs)),
+      ),
+      GoRoute(
+        path: '/personal-payment/select-wallet',
+        pageBuilder: (context, state) {
+          final receiver = state.extra! as PersonalPaymentReceiverModel;
+          return _fadeThroughPage(
+            state,
+            SelectPurposeWalletScreen(
+              onSelect: (context, wallet) => context.push(
+                '/personal-payment/confirm',
+                extra: PersonalPaymentConfirmArgs(receiver: receiver, wallet: wallet),
+              ),
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/personal-payment/confirm',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, PersonalPaymentConfirmScreen(args: state.extra! as PersonalPaymentConfirmArgs)),
+      ),
+      GoRoute(
+        path: '/profile/developer-tools',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const DeveloperToolsScreen()),
+      ),
+      GoRoute(
+        path: '/profile/developer-tools/demo-qr',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const DemoQrGeneratorScreen()),
+      ),
+      // Every static /schedule/... route MUST be declared before
+      // /schedule/:id below — same static-before-dynamic discipline as
+      // /merchants/payment-result vs /merchants/:id (see that comment above).
+      GoRoute(
+        path: '/schedule/create',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const CreateScheduleScreen()),
+      ),
+      GoRoute(
+        path: '/schedule/create/select-merchant',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const SelectMerchantScreen()),
+      ),
+      GoRoute(
+        path: '/schedule/create/select-receiver',
+        pageBuilder: (context, state) => _fadeThroughPage(
+          state,
+          QrScannerScreen(onPersonalReceiverSelected: (receiver) => context.pop(receiver)),
+        ),
+      ),
+      GoRoute(
+        path: '/schedule/:id',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, ScheduleDetailsScreen(scheduleId: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/schedule/:id/edit',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, EditScheduleScreen(schedule: state.extra! as ScheduledPaymentModel)),
+      ),
+      GoRoute(
+        path: '/schedule/:id/executions',
+        pageBuilder: (context, state) =>
+            _fadeThroughPage(state, ScheduleExecutionHistoryScreen(scheduleId: state.pathParameters['id']!)),
       ),
       GoRoute(
         path: '/payment-pin/create',

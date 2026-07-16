@@ -39,4 +39,30 @@ class ApiConstants {
 
   static const String paymentPinStatus = '/payment-pin/status';
   static const String paymentPinCreate = '/payment-pin';
+
+  static const String qrGenerateDemo = '/qr/demo';
+  static String qrValidate(String qrId) => '/qr/validate/$qrId';
+  static String qrPay(String qrId) => '/qr/$qrId/pay';
+
+  static const String personalPaymentMyQr = '/personal-payment/my-qr';
+  // Uri.encodeComponent is required here, not optional — a raw '+' in a
+  // query string is interpreted as a literal space by Express's query
+  // parser (the application/x-www-form-urlencoded convention), so an
+  // unencoded "+919876543210" would arrive at the backend as " 919876543210".
+  static String personalPaymentSearch(String phone) => '/personal-payment/search?phone=${Uri.encodeComponent(phone)}';
+  static String personalPaymentLookup(String userId, {String? secureVaultId}) => secureVaultId != null
+      ? '/personal-payment/lookup/$userId?secureVaultId=$secureVaultId'
+      : '/personal-payment/lookup/$userId';
+  static String personalPaymentPay(String receiverId) => '/personal-payment/$receiverId/pay';
+
+  static const String scheduledPaymentDashboard = '/scheduled-payments/dashboard';
+  static const String scheduledPaymentList = '/scheduled-payments';
+  static const String scheduledPaymentCreate = '/scheduled-payments';
+  static String scheduledPaymentDetails(String id) => '/scheduled-payments/$id';
+  static String scheduledPaymentUpdate(String id) => '/scheduled-payments/$id';
+  static String scheduledPaymentExecutions(String id, {String? cursor}) =>
+      cursor != null ? '/scheduled-payments/$id/executions?cursor=$cursor' : '/scheduled-payments/$id/executions';
+  static String scheduledPaymentPause(String id) => '/scheduled-payments/$id/pause';
+  static String scheduledPaymentResume(String id) => '/scheduled-payments/$id/resume';
+  static String scheduledPaymentCancel(String id) => '/scheduled-payments/$id';
 }

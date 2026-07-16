@@ -81,4 +81,8 @@ module.exports = {
   forgotPasswordSchema,
   resetPasswordSchema,
   fcmTokenUpdateSchema,
+  // Exported additively (Phase 7.1) so personalPayment.controller.js's phone
+  // search can validate against the exact same international-format rule
+  // registration already enforces, instead of duplicating the regex.
+  phoneNumberSchema,
 };
