@@ -50,6 +50,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             phoneNumber: '+91${_phoneController.text.trim()}',
             password: _passwordController.text,
           );
+      // No manual navigation needed — AuthNotifier.register() moves state to
+      // AuthStatus.onboarding, and the router's redirect sends onboarding to
+      // /create-pin automatically.
     } on AppException catch (e) {
       if (mounted) showAppSnackBar(context, e.message);
     } catch (_) {

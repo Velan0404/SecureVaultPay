@@ -50,11 +50,15 @@ final merchantProvider = NotifierProvider<MerchantNotifier, MerchantState>(Merch
 /// module that only ever debits a Purpose Wallet (never Main Wallet, which
 /// has no merchant-payment API to even call).
 class MerchantNotifier extends Notifier<MerchantState> {
-  late final MerchantRepository _repository;
+  // A getter, not a `late final` field assigned inside build() — see the
+  // identical note on WalletNotifier._repository. Not currently invalidated
+  // by AuthNotifier, but a plain field here would still be unsafe against
+  // any future invalidation/dependency-change rebuild, so it's fixed
+  // consistently across every Notifier in this audit.
+  MerchantRepository get _repository => ref.read(merchantRepositoryProvider);
 
   @override
   MerchantState build() {
-    _repository = ref.read(merchantRepositoryProvider);
     return const MerchantState();
   }
 

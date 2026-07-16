@@ -25,6 +25,15 @@ function getClient() {
   return client;
 }
 
+// Common Twilio Verify error codes worth surfacing as a friendly message
+// instead of Twilio's raw wording — used only outside production (see
+// sendOtp below). Reference: https://www.twilio.com/docs/api/errors
+const TWILIO_FRIENDLY_ERRORS = {
+  21608: 'This Twilio Trial account can only send OTP to verified phone numbers.',
+  21211: 'The phone number is not a valid mobile number.',
+  60203: 'Too many verification attempts for this number. Please wait before retrying.',
+};
+
 // Twilio Verify generates and stores the OTP entirely on Twilio's side — this
 // service never sees, generates, or persists the code itself.
 async function sendOtp(phoneNumber) {
@@ -34,7 +43,19 @@ async function sendOtp(phoneNumber) {
       .services(process.env.TWILIO_VERIFY_SERVICE_SID)
       .verifications.create({ to: phoneNumber, channel: 'sms' });
   } catch (err) {
-    throw new AppError(502, 'OTP_SEND_FAILED', 'Could not send the verification code. Please try again.');
+    // Production never leaks Twilio internals to the client — same generic
+    // message regardless of cause. Outside production, surface the real
+    // Twilio error code/message so it's actually debuggable, using a
+    // friendly wording for the common cases above and falling back to
+    // Twilio's own message otherwise.
+    if (process.env.NODE_ENV === 'production') {
+      throw new AppError(502, 'OTP_SEND_FAILED', 'Unable to send verification code.');
+    }
+    const friendlyMessage = TWILIO_FRIENDLY_ERRORS[err.code] || err.message || 'Unable to send verification code.';
+    throw new AppError(502, 'OTP_SEND_FAILED', friendlyMessage, {
+      twilioCode: err.code,
+      twilioMessage: err.message,
+    });
   }
 }
 

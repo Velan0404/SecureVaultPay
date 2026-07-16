@@ -12,7 +12,7 @@
 
 ## Authentication
 
-- [x] Register (collects mobile number via a fixed +91 prefix + 10-digit input; always initializes fresh device setup, required for Transaction Authentication OTP delivery)
+- [x] Register (collects mobile number via a fixed +91 prefix + 10-digit input; always initializes fresh device setup, required for Transaction Authentication OTP delivery; calls the account-creation endpoint directly — Signup OTP Verification was added in Phase 8.1 and removed again in Phase 8.1.2 as a development-only simplification, see PROMPT_HISTORY.md)
 - [x] Login (a returning device still passes through fingerprint/PIN unlock after credentials verify — never skips straight to Dashboard, never re-asks Create PIN)
 - [x] JWT (access + refresh, rotation with reuse detection)
 - [x] Fingerprint Login
@@ -93,8 +93,14 @@
 
 ## Analytics
 
-- [ ] Dashboard Charts
-- [ ] Spending Reports
+- [x] Dashboard Analytics (Total Balance, Total Income, Total Expenses, Total Transfers, Total Merchant Payments, Total User Payments, Total Scheduled Payments, Monthly Spending — all real, aggregated from existing `WalletTransaction`/`ScheduledPaymentExecution` data, zero new tables)
+- [x] Purpose Wallet Analytics (per wallet: current balance, total deposited, total spent, remaining budget, spending percentage, transaction count)
+- [x] Dashboard Charts (Monthly Spending line, Purpose Wallet Pie, Weekly Expense bar, Income vs Expense — `fl_chart`)
+- [x] Insights (budget-threshold, spend-trend-vs-prior-period, dormant-wallet, and upcoming-scheduled-payment observations, all rule-generated from real data — never fabricated)
+- [x] Filters (Today / Last 7 Days / Last 30 Days / Last 90 Days / This Year / Custom Range — shared across every Analytics screen, auto-refreshes on change)
+- [x] Spending Reports (Daily / Weekly / Monthly summaries: income, expenses, transfers, merchant/personal/scheduled payments)
+- [x] Per-account isolation (Phase 8.1) — `analyticsProvider`/`walletProvider`/`scheduledPaymentProvider` are invalidated on logout and login so a new account never reuses the previous account's cached state; genuine zero-data accounts see honest empty-state copy, never a fake chart
+- [x] Premium UI polish (Phase 8.1) — gradient hero balance card, shimmer loading skeletons, animated stat count-ups, animated chart draw-in, animated progress bars, real-data-only achievement badges — presentation only, same backend/models
 
 ---
 

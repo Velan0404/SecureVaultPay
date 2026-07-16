@@ -65,4 +65,26 @@ class ApiConstants {
   static String scheduledPaymentPause(String id) => '/scheduled-payments/$id/pause';
   static String scheduledPaymentResume(String id) => '/scheduled-payments/$id/resume';
   static String scheduledPaymentCancel(String id) => '/scheduled-payments/$id';
+
+  // Shared by every /analytics/* endpoint below — one place building the
+  // range/startDate/endDate query string so the four callers can't drift.
+  static String _rangeQuery(String range, {String? startDate, String? endDate}) {
+    final params = {
+      'range': range,
+      'startDate': ?startDate,
+      'endDate': ?endDate,
+    };
+    return params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+  }
+
+  static String analyticsDashboard(String range, {String? startDate, String? endDate}) =>
+      '/analytics/dashboard?${_rangeQuery(range, startDate: startDate, endDate: endDate)}';
+  static String analyticsWallets(String range, {String? startDate, String? endDate}) =>
+      '/analytics/wallets?${_rangeQuery(range, startDate: startDate, endDate: endDate)}';
+  static String analyticsCharts(String range, {String? startDate, String? endDate}) =>
+      '/analytics/charts?${_rangeQuery(range, startDate: startDate, endDate: endDate)}';
+  static String analyticsInsights(String range, {String? startDate, String? endDate}) =>
+      '/analytics/insights?${_rangeQuery(range, startDate: startDate, endDate: endDate)}';
+  static String analyticsReports(String period, {String? date}) =>
+      date != null ? '/analytics/reports?period=$period&date=${Uri.encodeComponent(date)}' : '/analytics/reports?period=$period';
 }

@@ -16,6 +16,29 @@ class ShimmerBox extends StatefulWidget {
   State<ShimmerBox> createState() => _ShimmerBoxState();
 }
 
+/// A shimmering stand-in for one [StatTile]-shaped card — same footprint so
+/// a grid doesn't reflow once real figures arrive (Analytics' loading state).
+class ShimmerStatTile extends StatelessWidget {
+  const ShimmerStatTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(color: AppColors.surfaceElevated.withValues(alpha: 0.5), borderRadius: AppRadius.mdRadius),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ShimmerBox(width: 60, height: 10),
+          SizedBox(height: 8),
+          ShimmerBox(width: 90, height: 16),
+        ],
+      ),
+    );
+  }
+}
+
 class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 

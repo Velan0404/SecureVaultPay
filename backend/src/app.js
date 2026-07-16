@@ -11,6 +11,7 @@ const paymentPinRoutes = require('./routes/paymentPin.routes');
 const qrRoutes = require('./routes/qr.routes');
 const personalPaymentRoutes = require('./routes/personalPayment.routes');
 const scheduledPaymentRoutes = require('./routes/scheduledPayment.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
 const errorHandler = require('./middlewares/error.middleware');
 
 const app = express();
@@ -29,6 +30,7 @@ app.use('/api/payment-pin', paymentPinRoutes);
 app.use('/api/qr', qrRoutes);
 app.use('/api/personal-payment', personalPaymentRoutes);
 app.use('/api/scheduled-payments', scheduledPaymentRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.use(errorHandler);
 

@@ -200,6 +200,18 @@ const scheduledPaymentCreateLimiter = rateLimit({
   handler: rateLimitedResponse,
 });
 
+// Read-only dashboard/chart/report endpoints, expected to be called
+// somewhat frequently as a user changes filters — generous but still capped
+// against abuse, not a brute-force-sensitive endpoint.
+const analyticsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userKeyGenerator,
+  handler: rateLimitedResponse,
+});
+
 module.exports = {
   loginLimiter,
   registerLimiter,
@@ -219,4 +231,5 @@ module.exports = {
   personalPaymentLookupLimiter,
   personalPaymentSearchLimiter,
   scheduledPaymentCreateLimiter,
+  analyticsLimiter,
 };

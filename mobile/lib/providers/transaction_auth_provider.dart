@@ -64,11 +64,15 @@ final transactionAuthProvider =
 /// is an additional, isolated security layer, not part of the Wallet
 /// module's own state.
 class TransactionAuthNotifier extends Notifier<TransactionAuthState> {
-  late final TransactionAuthRepository _repository;
+  // A getter, not a `late final` field assigned inside build() — see the
+  // identical note on WalletNotifier._repository. Not currently invalidated
+  // by AuthNotifier, but a plain field here would still be unsafe against
+  // any future invalidation/dependency-change rebuild, so it's fixed
+  // consistently across every Notifier in this audit.
+  TransactionAuthRepository get _repository => ref.read(transactionAuthRepositoryProvider);
 
   @override
   TransactionAuthState build() {
-    _repository = ref.read(transactionAuthRepositoryProvider);
     return const TransactionAuthState();
   }
 

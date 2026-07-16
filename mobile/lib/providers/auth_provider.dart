@@ -9,6 +9,9 @@ import '../services/auth_service.dart';
 import '../services/biometric_service.dart';
 import '../services/device_service.dart';
 import '../services/secure_storage_service.dart';
+import 'analytics_provider.dart';
+import 'scheduled_payment_provider.dart';
+import 'wallet_provider.dart';
 
 const int kMaxPinAttempts = 5;
 
@@ -50,15 +53,21 @@ final authServiceProvider = Provider<AuthService>(
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
 class AuthNotifier extends Notifier<AuthState> {
-  late final SecureStorageService _secureStorage;
-  late final AuthService _authService;
-  late final BiometricService _biometricService;
+  // Getters, not `late final` fields assigned inside build(): Riverpod can
+  // re-run build() on this SAME Notifier instance rather than creating a
+  // fresh one whenever this provider is invalidated/rebuilt while it still
+  // has an active listener — a `late final` field throws
+  // LateInitializationError ("already initialized") on that second
+  // assignment. Getters have no field to re-initialize, so they stay safe
+  // no matter how many times build() runs. (authProvider itself isn't
+  // invalidated by _resetPerAccountProviders() today, but every Notifier in
+  // this codebase is fixed consistently per the Phase 8.1.1 audit.)
+  SecureStorageService get _secureStorage => ref.read(secureStorageServiceProvider);
+  AuthService get _authService => ref.read(authServiceProvider);
+  BiometricService get _biometricService => ref.read(biometricServiceProvider);
 
   @override
   AuthState build() {
-    _secureStorage = ref.read(secureStorageServiceProvider);
-    _authService = ref.read(authServiceProvider);
-    _biometricService = ref.read(biometricServiceProvider);
     return AuthState.initial;
   }
 
@@ -168,6 +177,7 @@ class AuthNotifier extends Notifier<AuthState> {
     await _secureStorage.resetDeviceSetup();
     await _secureStorage.saveSession(accessToken: result.accessToken, refreshToken: result.refreshToken);
     state = state.copyWith(status: AuthStatus.onboarding, user: result.user);
+    _resetPerAccountProviders();
   }
 
   /// Verifying the password is not the same as unlocking the app: if this
@@ -183,6 +193,7 @@ class AuthNotifier extends Notifier<AuthState> {
       status: deviceSetupComplete ? AuthStatus.needsUnlock : AuthStatus.onboarding,
       user: result.user,
     );
+    _resetPerAccountProviders();
   }
 
   /// Called after the Enable Biometric onboarding step finishes (or is skipped).
@@ -251,5 +262,25 @@ class AuthNotifier extends Notifier<AuthState> {
     }
     await _secureStorage.clearSession();
     state = const AuthState(status: AuthStatus.unauthenticated);
+    _resetPerAccountProviders();
+  }
+
+  /// Every provider below caches per-user data (wallet balances, scheduled
+  /// payments, analytics) and is a plain `NotifierProvider` — not
+  /// `.autoDispose` — so its state otherwise survives for the life of the
+  /// single root `ProviderScope` (see main.dart) across an entire
+  /// logout/login cycle. Without this, the very next account to log in on
+  /// this device would see the previous account's cached figures until
+  /// something else happened to overwrite them (the exact bug reported
+  /// against Analytics in Phase 8.1). Invalidating just marks each provider
+  /// dirty — the next read reruns its `build()` and returns a fresh initial
+  /// state, so every "only load if not already loaded" guard elsewhere
+  /// (AnalyticsDashboardScreen, PurposeWalletAnalyticsScreen, InsightsScreen,
+  /// ProfileScreen) correctly detects "nothing loaded yet" and refetches for
+  /// the new account instead of reusing stale data.
+  void _resetPerAccountProviders() {
+    ref.invalidate(walletProvider);
+    ref.invalidate(scheduledPaymentProvider);
+    ref.invalidate(analyticsProvider);
   }
 }

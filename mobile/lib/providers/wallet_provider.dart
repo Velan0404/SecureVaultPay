@@ -58,11 +58,18 @@ class WalletState {
 final walletProvider = NotifierProvider<WalletNotifier, WalletState>(WalletNotifier.new);
 
 class WalletNotifier extends Notifier<WalletState> {
-  late final WalletRepository _repository;
+  // A getter, not a `late final` field assigned inside build(): when this
+  // provider is invalidated (see AuthNotifier._resetPerAccountProviders())
+  // while it still has an active listener (e.g. a screen mounted below in
+  // the widget tree), Riverpod re-runs build() on this SAME Notifier
+  // instance rather than creating a fresh one — a `late final` field would
+  // throw LateInitializationError ("_repository has already been
+  // initialized") on that second assignment. A getter has no field to
+  // re-initialize, so it stays safe no matter how many times build() runs.
+  WalletRepository get _repository => ref.read(walletRepositoryProvider);
 
   @override
   WalletState build() {
-    _repository = ref.read(walletRepositoryProvider);
     return const WalletState();
   }
 

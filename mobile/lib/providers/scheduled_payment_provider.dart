@@ -52,11 +52,15 @@ final scheduledPaymentProvider =
 /// recurring Purpose Wallet -> Merchant/User payments executed server-side
 /// by scheduler.service.js, never by this app directly.
 class ScheduledPaymentNotifier extends Notifier<ScheduledPaymentState> {
-  late final ScheduledPaymentRepository _repository;
+  // A getter, not a `late final` field assigned inside build() — see the
+  // identical note on WalletNotifier._repository. This provider is
+  // invalidated on every logout/login/register, and a `late final` field
+  // throws LateInitializationError if build() reruns on the same instance
+  // while a listener is still attached.
+  ScheduledPaymentRepository get _repository => ref.read(scheduledPaymentRepositoryProvider);
 
   @override
   ScheduledPaymentState build() {
-    _repository = ref.read(scheduledPaymentRepositoryProvider);
     return const ScheduledPaymentState();
   }
 

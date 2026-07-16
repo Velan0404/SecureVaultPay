@@ -8,7 +8,10 @@ import '../models/purpose_wallet_model.dart';
 import '../models/qr_validation_model.dart';
 import '../models/scheduled_payment_model.dart';
 import '../providers/auth_provider.dart';
-import '../screens/analytics/analytics_screen.dart';
+import '../screens/analytics/analytics_dashboard_screen.dart';
+import '../screens/analytics/insights_screen.dart';
+import '../screens/analytics/monthly_report_screen.dart';
+import '../screens/analytics/purpose_wallet_analytics_screen.dart';
 import '../screens/auth/create_pin_screen.dart';
 import '../screens/auth/enable_biometric_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
@@ -176,7 +179,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/analytics',
-                pageBuilder: (context, state) => _fadeThroughPage(state, const AnalyticsScreen()),
+                pageBuilder: (context, state) => _fadeThroughPage(state, const AnalyticsDashboardScreen()),
               ),
             ],
           ),
@@ -380,6 +383,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/schedule/:id/executions',
         pageBuilder: (context, state) =>
             _fadeThroughPage(state, ScheduleExecutionHistoryScreen(scheduleId: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/analytics/wallets',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const PurposeWalletAnalyticsScreen()),
+      ),
+      GoRoute(
+        path: '/analytics/report',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const MonthlyReportScreen()),
+      ),
+      GoRoute(
+        path: '/analytics/insights',
+        pageBuilder: (context, state) => _fadeThroughPage(state, const InsightsScreen()),
       ),
       GoRoute(
         path: '/payment-pin/create',
